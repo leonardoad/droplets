@@ -6,28 +6,23 @@ class Droplet {
         this.speed = speed(size);
     }
 
+    update() {
+        this.y += tiltY * this.speed;
+        this.x += tiltX * this.speed;
+    }
     draw(ctx) {
-        // ctx.beginPath();
-        // ctx.arc(this.x, this.y, this.size, 0, 2 * Math.PI);
-        // ctx.fill();
 
-        // console.log(`this.x + this.size * 0.5`,this.x , this.size , 0.5, this.x + this.size * 0.5);
+        this.drawShadow(ctx);
+        this.drawDroplet(ctx);
+        this.drawReflection(ctx);
+
+    }
+
+    drawDroplet(ctx) {
         let gradient = ctx.createRadialGradient(this.x + this.size * 0.5, this.y + this.size * 0.5, this.size * 0.3, this.x - this.size * 0.4, this.y + this.size * 0.9, this.size * 6.6);
         gradient.addColorStop(0.1, '#efea63');
         gradient.addColorStop(0.2, '#8ad000');
         gradient.addColorStop(0.4, '#83c100');
-        
-        
-        // let shadow = ctx.createRadialGradient(this.x * 0.9 , this.y * 0.85, this.size * 0.3, this.x  * 0.9, this.y * 1.3, this.size * 6.6);
-        let shadow = ctx.createRadialGradient(this.x, this.y, this.size * 0.3, this.x + this.size * 0.1, this.y - this.size * 0.9, this.size * 6.6);
-        shadow.addColorStop(0.1, '#8ad000');
-        shadow.addColorStop(0.223, '#cade01');
-
-        //Draw the shadow
-        ctx.beginPath();
-        ctx.arc(this.x + this.size * 0.1, this.y + this.size * 0.1, this.size , 0, 2 * Math.PI);
-        ctx.fillStyle = shadow;
-        ctx.fill();
 
         // Draw the main droplet
         ctx.beginPath();
@@ -35,7 +30,23 @@ class Droplet {
         ctx.fillStyle = gradient;
         ctx.fill();
 
+    }
+    drawShadow(ctx) {
+        // let shadow = ctx.createRadialGradient(this.x * 0.9 , this.y * 0.85, this.size * 0.3, this.x  * 0.9, this.y * 1.3, this.size * 6.6);
+        let shadow = ctx.createRadialGradient(this.x, this.y, this.size * 0.3, this.x + this.size * 0.1, this.y - this.size * 0.9, this.size * 6.6);
+        shadow.addColorStop(0.1, '#8ad000');
+        shadow.addColorStop(0.223, '#cade01');
 
+        //Draw the shadow
+        ctx.beginPath();
+        ctx.arc(this.x + this.size * 0.1, this.y + this.size * 0.1, this.size, 0, 2 * Math.PI);
+        ctx.fillStyle = shadow;
+        ctx.fill();
+
+    }
+
+
+    drawReflection(ctx) {
         // Draw the ::before pseudo-element
         ctx.beginPath();
         ctx.arc(this.x - this.size / 1.7, this.y - this.size / 2.2, this.size / 17, 0, 2 * Math.PI);
@@ -48,6 +59,7 @@ class Droplet {
         ctx.fillStyle = '#f4f1f4';
         ctx.fill();
     }
+
 }
 
 let droplets = [];
@@ -84,10 +96,11 @@ function joinDroplets() {
 }
 function update() {
     for (let droplet of droplets) {
-        updateDroplet(droplet);
-    }   
+        // updateDroplet(droplet);
+        droplet.update();
+    }
     //when the droplet goes off the screen, remove it from the array
-    droplets = droplets.filter(function(droplet) {
+    droplets = droplets.filter(function (droplet) {
         return droplet.y < CANVAS_HEIGHT && droplet.x < CANVAS_WIDTH && droplet.y > 0 && droplet.x > 0;
     });
 
@@ -98,10 +111,6 @@ function update() {
     joinDroplets();
 }
 
-function updateDroplet(droplet) {
-    droplet.y += tiltY * droplet.speed;
-    droplet.x += tiltX * droplet.speed;
-}
 
 function r(min, max) {
     return Math.random() * (max - min) + min;
@@ -137,7 +146,7 @@ function draw() {
     }
 }
 
-window.addEventListener('keydown', function(event) {
+window.addEventListener('keydown', function (event) {
     if (event.key === 'ArrowLeft') {
         tiltX = -1;
     } else if (event.key === 'ArrowRight') {
@@ -152,16 +161,14 @@ window.addEventListener('keydown', function(event) {
     }
 });
 
-window.addEventListener('keyup', function(event) {
-    if (['ArrowLeft', 'ArrowRight'].includes( event.key)) {
+window.addEventListener('keyup', function (event) {
+    if (['ArrowLeft', 'ArrowRight'].includes(event.key)) {
         tiltX = 0;
     }
-    if (['ArrowUp', 'ArrowDown'].includes( event.key)) {
+    if (['ArrowUp', 'ArrowDown'].includes(event.key)) {
         tiltY = 0;
     }
 });
-        // droplets.push(new Droplet(300, 300, 100));
-        // droplets.push(new Droplet(500, 500, 50));
 
 function gameLoop() {
     update();
