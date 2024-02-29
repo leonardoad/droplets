@@ -1,14 +1,54 @@
+let droplets = [];
+let tiltX = 0;
+let tiltY = 0;
+const CANVAS_WIDTH = 800;
+const CANVAS_HEIGHT = 600;
+const MAX_TILT = 5;
+const BOUNCE_OFF_EDGES = false;
+
 class Droplet {
     constructor(x, y, size) {
         this.x = x;
         this.y = y;
         this.size = size;
         this.speed = speed(size);
+        this.vx = tiltX * this.speed; // x velocity
+        this.vy = tiltY * this.speed; // y velocity
+        this.maxSpeed = size / 10;
     }
 
     update() {
-        this.y += tiltY * this.speed;
-        this.x += tiltX * this.speed;
+        // Update velocity based on tilt
+        this.updateVel('vy', tiltY);
+        this.updateVel('vx', tiltX);
+
+        // Update position based on velocity
+        this.x += this.vx;
+        this.y += this.vy;
+
+        if (BOUNCE_OFF_EDGES) {
+            // Bounce off the edges of the screen
+            if (this.x < 0 || this.x > CANVAS_WIDTH) {
+                this.vx = -this.vx;
+            }
+            if (this.y < 0 || this.y > CANVAS_HEIGHT) {
+                this.vy = -this.vy;
+            }
+        }
+
+
+    }
+    updateVel(prop, tilt) {
+        this[prop] += tilt * (this.speed);
+        if (tilt === 0) {
+            this[prop] = tilt * this.speed;
+        }
+        if (this[prop] > this.maxSpeed) {
+            this[prop] = this.maxSpeed;
+        }
+        if (this[prop] < -this.maxSpeed) {
+            this[prop] = -this.maxSpeed;
+        }
     }
     draw(ctx) {
 
@@ -62,12 +102,6 @@ class Droplet {
 
 }
 
-let droplets = [];
-let tiltX = 0;
-let tiltY = 0;
-const CANVAS_WIDTH = 800;
-const CANVAS_HEIGHT = 600;
-
 function joinDroplets() {
     //when droplets touch each other, remove them from the array and add a new one in the same position, but adding their sizes
     for (let i = 0; i < droplets.length; i++) {
@@ -96,13 +130,15 @@ function joinDroplets() {
 }
 function update() {
     for (let droplet of droplets) {
-        // updateDroplet(droplet);
         droplet.update();
     }
-    //when the droplet goes off the screen, remove it from the array
-    droplets = droplets.filter(function (droplet) {
-        return droplet.y < CANVAS_HEIGHT && droplet.x < CANVAS_WIDTH && droplet.y > 0 && droplet.x > 0;
-    });
+
+    if (!BOUNCE_OFF_EDGES) {
+        //when the droplet goes off the screen, remove it from the array
+        droplets = droplets.filter(function (droplet) {
+            return droplet.y < CANVAS_HEIGHT && droplet.x < CANVAS_WIDTH && droplet.y > 0 && droplet.x > 0;
+        });
+    }
 
     //if there are less than 100 droplets, add a new one
     if (droplets.length < 2) {
@@ -130,7 +166,7 @@ function rSize() {
 }
 
 function speed(size) {
-    return size / 10;
+    return size / 100;
 }
 
 function draw() {
@@ -148,13 +184,25 @@ function draw() {
 
 window.addEventListener('keydown', function (event) {
     if (event.key === 'ArrowLeft') {
-        tiltX = -1;
+        tiltX += -1;
+        if (tiltX < -MAX_TILT) {
+            tiltX = -MAX_TILT;
+        }
     } else if (event.key === 'ArrowRight') {
-        tiltX = 1;
+        tiltX += 1;
+        if (tiltX > MAX_TILT) {
+            tiltX = MAX_TILT;
+        }
     } else if (event.key === 'ArrowUp') {
-        tiltY = -1;
+        tiltY += -1;
+        if (tiltY < -MAX_TILT) {
+            tiltY = -MAX_TILT;
+        }
     } else if (event.key === 'ArrowDown') {
-        tiltY = 1;
+        tiltY += 1;
+        if (tiltY > MAX_TILT) {
+            tiltY = MAX_TILT;
+        }
     }
     if (event.key === ' ') {
         droplets.push(new Droplet(rPosX(), rPosY(), rSize()));
