@@ -89,13 +89,13 @@ class Droplet {
         // Draw the ::before pseudo-element
         ctx.beginPath();
         ctx.arc(this.x - this.size / 1.7, this.y - this.size / 2.2, this.size / 17, 0, 2 * Math.PI);
-        ctx.fillStyle = '#f4f1f4';
+        ctx.fillStyle = '#f4f1f49f';
         ctx.fill();
 
         // Draw the ::after pseudo-element
         ctx.beginPath();
         ctx.ellipse(this.x - this.size / 3.9, this.y - this.size / 1.4, this.size / 10, this.size / 4, Math.PI / 3, 0, 2 * Math.PI);
-        ctx.fillStyle = '#f4f1f4';
+        ctx.fillStyle = '#f4f1f49f';
         ctx.fill();
     }
 
