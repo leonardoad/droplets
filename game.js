@@ -5,7 +5,7 @@ const CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 600;
 const MAX_TILT = 5;
 const BOUNCE_OFF_EDGES = false;
-const MAX_DROPLETS = 50;
+const MAX_DROPLETS = 3;
 
 class Droplet {
     constructor(x, y, size, counter = 0) {
@@ -17,9 +17,29 @@ class Droplet {
         this.vy = tiltY * this.speed; // y velocity
         this.maxSpeed = size / 10;
         this.counter = counter;
+        this.splatters = [];
+        this.splatted = false;
     }
-
+    createSplatter() {
+        // Create 10 smaller droplets in random directions
+        for (let i = 0; i < 10; i++) {
+            let speed = Math.random() * 2 + 1; // Random speed between 1 and 3
+            let angle = Math.random() * Math.PI * 2; // Random direction
+            let splatter = {
+                x: this.x,
+                y: this.y,
+                size: this.size / 4, // Smaller size
+                vx: Math.cos(angle) * speed, // Velocity in x direction
+                vy: Math.sin(angle) * speed, // Velocity in y direction
+            };
+            this.splatters.push(splatter);
+        }
+        this.splatted = true;
+    }
     update() {
+
+
+
         // Update velocity based on tilt
         this.updateVel('vy', tiltY);
         this.updateVel('vx', tiltX);
@@ -38,6 +58,19 @@ class Droplet {
             }
         }
 
+        
+        // Update the main droplet
+        if (!this.splatted) {
+            this.createSplatter();
+        }
+
+        // Update the splatters
+        for (let splatter of this.splatters) {
+            splatter.x += splatter.vx;
+            splatter.y += splatter.vy;
+            splatter.size *= 0.99; // Gradually shrink
+        }
+
 
     }
     updateVel(prop, tilt) {
@@ -53,6 +86,7 @@ class Droplet {
         }
     }
     draw(ctx) {
+        this.drawSplatters(ctx)
         this.drawShadow(ctx);
         this.drawDroplet(ctx);
         this.drawReflection(ctx);
@@ -102,7 +136,23 @@ class Droplet {
     drawCounter(ctx) {
         ctx.font = (this.size * 0.5) + "px Arial";
         ctx.fillStyle = '#8ad000';
-        ctx.fillText(this.counter, this.x - (this.size * 0.2) , this.y + (this.size * 0.2));
+        ctx.fillText(this.counter, this.x - (this.size * 0.2), this.y + (this.size * 0.2));
+    }
+
+    drawSplatters(ctx) {
+        // Draw the splatters
+        for (let splatter of this.splatters) {
+            let gradient = ctx.createRadialGradient(splatter.x + splatter.size * 0.5, splatter.y + splatter.size * 0.5, splatter.size * 0.3, splatter.x - splatter.size * 0.4, splatter.y + splatter.size * 0.9, splatter.size * 6.6);
+            gradient.addColorStop(0.1, '#efea63');
+            gradient.addColorStop(0.2, '#8ad000');
+            gradient.addColorStop(0.4, '#83c100');
+
+
+            ctx.beginPath();
+            ctx.arc(splatter.x, splatter.y, splatter.size, 0, 2 * Math.PI);
+            ctx.fillStyle = gradient;
+            ctx.fill();
+        }
     }
 
 }
