@@ -5,9 +5,10 @@ const CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 600;
 const MAX_TILT = 5;
 const BOUNCE_OFF_EDGES = false;
+const MAX_DROPLETS = 50;
 
 class Droplet {
-    constructor(x, y, size) {
+    constructor(x, y, size, counter = 0) {
         this.x = x;
         this.y = y;
         this.size = size;
@@ -15,6 +16,7 @@ class Droplet {
         this.vx = tiltX * this.speed; // x velocity
         this.vy = tiltY * this.speed; // y velocity
         this.maxSpeed = size / 10;
+        this.counter = counter;
     }
 
     update() {
@@ -51,11 +53,10 @@ class Droplet {
         }
     }
     draw(ctx) {
-
         this.drawShadow(ctx);
         this.drawDroplet(ctx);
         this.drawReflection(ctx);
-
+        this.drawCounter(ctx)
     }
 
     drawDroplet(ctx) {
@@ -84,8 +85,6 @@ class Droplet {
         ctx.fill();
 
     }
-
-
     drawReflection(ctx) {
         // Draw the ::before pseudo-element
         ctx.beginPath();
@@ -100,6 +99,12 @@ class Droplet {
         ctx.fill();
     }
 
+    drawCounter(ctx) {
+        ctx.font = (this.size * 0.5) + "px Arial";
+        ctx.fillStyle = '#8ad000';
+        ctx.fillText(this.counter, this.x - (this.size * 0.2) , this.y + (this.size * 0.2));
+    }
+
 }
 
 function joinDroplets() {
@@ -111,10 +116,12 @@ function joinDroplets() {
 
             //get the largest droplet
             let newDroplet = droplet1.size > droplet2.size ? droplet1 : droplet2;
+            newDroplet.counter = droplet1.size > droplet2.size ? droplet1.counter : droplet2.counter;
 
 
             let distance = Math.sqrt((droplet1.x - droplet2.x) ** 2 + (droplet1.y - droplet2.y) ** 2);
             if (distance < droplet1.size + droplet2.size) {
+                newDroplet.counter++;
                 let newSize = Math.sqrt(droplet1.size * droplet1.size + droplet2.size * droplet2.size);
                 droplets.splice(i, 1);
                 droplets.splice(j - 1, 1); // j - 1 because we just removed an element at position i
@@ -122,7 +129,7 @@ function joinDroplets() {
                 // limit the size to the maximum size of a circle using the canvas width and height
                 const maxSize = Math.min(CANVAS_WIDTH, CANVAS_HEIGHT) / 2;
                 if (newSize <= maxSize) {
-                    droplets.push(new Droplet(newDroplet.x, newDroplet.y, newSize));
+                    droplets.push(new Droplet(newDroplet.x, newDroplet.y, newSize, newDroplet.counter));
                 }
             }
         }
@@ -140,9 +147,9 @@ function update() {
         });
     }
 
-    //if there are less than 100 droplets, add a new one
-    if (droplets.length < 2) {
-        // droplets.push(new Droplet(rPosX(), rPosY(), rSize()));
+    //if there are less than MAX_DROPLETS droplets, add a new one
+    if (droplets.length < MAX_DROPLETS) {
+        droplets.push(new Droplet(rPosX(), rPosY(), rSize()));
     }
     joinDroplets();
 }
