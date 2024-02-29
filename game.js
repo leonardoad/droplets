@@ -8,7 +8,7 @@ const BOUNCE_OFF_EDGES = false;
 const MAX_DROPLETS = 3;
 
 class Droplet {
-    constructor(x, y, size, counter = 0) {
+    constructor(x, y, size, counter = 0, splatted = false) {
         this.x = x;
         this.y = y;
         this.size = size;
@@ -18,7 +18,7 @@ class Droplet {
         this.maxSpeed = size / 10;
         this.counter = counter;
         this.splatters = [];
-        this.splatted = false;
+        this.splatted = splatted;
     }
     createSplatter() {
         // Create 10 smaller droplets in random directions
@@ -179,7 +179,7 @@ function joinDroplets() {
                 // limit the size to the maximum size of a circle using the canvas width and height
                 const maxSize = Math.min(CANVAS_WIDTH, CANVAS_HEIGHT) / 2;
                 if (newSize <= maxSize) {
-                    droplets.push(new Droplet(newDroplet.x, newDroplet.y, newSize, newDroplet.counter));
+                    droplets.push(new Droplet(newDroplet.x, newDroplet.y, newSize, newDroplet.counter, true));
                 }
             }
         }
