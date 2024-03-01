@@ -1,3 +1,7 @@
+
+![image](https://github.com/leonardoad/droplets/assets/2466150/1db1b979-336c-4316-a03e-753a6476ca30)
+
+
 ## TODO
 - Add controls for the parameters
   - MAX_TILT
