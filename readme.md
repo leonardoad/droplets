@@ -1,4 +1,13 @@
 ## TODO
+- Add controls for the parameters
+  - MAX_TILT
+  - BOUNCE_OFF_EDGES
+  - MAX_DROPLETS
+  - DROPLET_CREATION_INTERVAL
+  - USE_GRAVITY
+  - DROPLETS_MAX_SPEED
+- Add background images
+- 
 
 
 ## DONE
