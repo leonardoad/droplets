@@ -5,7 +5,8 @@ const CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 600;
 const MAX_TILT = 5;
 const BOUNCE_OFF_EDGES = false;
-const MAX_DROPLETS = 50;
+const MAX_DROPLETS = 100;
+const DROPLET_CREATION_INTERVAL = 100000;
 
 class Droplet {
     constructor(x, y, size, counter = 1, splatted = false) {
@@ -37,10 +38,10 @@ class Droplet {
         this.splatted = true;
     }
     update() {
-
         // Update velocity based on tilt
         this.updateVel('vy', tiltY);
         this.updateVel('vx', tiltX);
+        this.vy += this.speed; // x velocity
 
         // Update position based on velocity
         this.x += this.vx;
@@ -191,15 +192,22 @@ function update() {
     if (!BOUNCE_OFF_EDGES) {
         //when the droplet goes off the screen, remove it from the array
         droplets = droplets.filter(function (droplet) {
-            return droplet.y < CANVAS_HEIGHT && droplet.x < CANVAS_WIDTH && droplet.y > 0 && droplet.x > 0;
+            return droplet.y + droplet.size < CANVAS_HEIGHT && droplet.x + droplet.size < CANVAS_WIDTH && droplet.y - droplet.size > 0 && droplet.x - droplet.size > 0;
         });
     }
 
-    //if there are less than MAX_DROPLETS droplets, add a new one
+    createDroplet();
+    joinDroplets();
+}
+
+function createDroplet() {
     if (droplets.length < MAX_DROPLETS) {
         droplets.push(new Droplet(rPosX(), rPosY(), rSize()));
     }
-    joinDroplets();
+
+    // Call this function again after a random delay between 1 and 3 seconds
+    let delay = Math.random() * 2000 + DROPLET_CREATION_INTERVAL; // Random delay between 1000 and 3000 milliseconds
+    setTimeout(createDroplet, delay);
 }
 
 
@@ -245,16 +253,16 @@ window.addEventListener('keydown', function (event) {
         if (tiltX > MAX_TILT) {
             tiltX = MAX_TILT;
         }
-    } else if (event.key === 'ArrowUp') {
-        tiltY += -1;
-        if (tiltY < -MAX_TILT) {
-            tiltY = -MAX_TILT;
-        }
-    } else if (event.key === 'ArrowDown') {
-        tiltY += 1;
-        if (tiltY > MAX_TILT) {
-            tiltY = MAX_TILT;
-        }
+    // } else if (event.key === 'ArrowUp') {
+    //     tiltY += -1;
+    //     if (tiltY < -MAX_TILT) {
+    //         tiltY = -MAX_TILT;
+    //     }
+    // } else if (event.key === 'ArrowDown') {
+    //     tiltY += 1;
+    //     if (tiltY > MAX_TILT) {
+    //         tiltY = MAX_TILT;
+    //     }
     }
     if (event.key === ' ') {
         droplets.push(new Droplet(rPosX(), rPosY(), rSize()));
