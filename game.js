@@ -1,12 +1,14 @@
 let droplets = [];
 let tiltX = 0;
 let tiltY = 0;
+let maxCounter = 0;
 const CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 600;
 const MAX_TILT = 5;
 const BOUNCE_OFF_EDGES = false;
 const MAX_DROPLETS = 100;
 const DROPLET_CREATION_INTERVAL = 100000;
+const USE_GRAVITY = false;
 
 class Droplet {
     constructor(x, y, size, counter = 1, splatted = false) {
@@ -23,7 +25,7 @@ class Droplet {
     }
     createSplatter() {
         // Create 10 smaller droplets in random directions
-        for (let i = 0; i < Math.ceil(this.size*0.5); i++) {
+        for (let i = 0; i < Math.ceil(this.size * 0.5); i++) {
             let speed = Math.random() * 2 + 1; // Random speed between 1 and 3
             let angle = Math.random() * Math.PI * 2; // Random direction
             let splatter = {
@@ -41,7 +43,10 @@ class Droplet {
         // Update velocity based on tilt
         this.updateVel('vy', tiltY);
         this.updateVel('vx', tiltX);
-        this.vy += this.speed; // x velocity
+        
+        if(USE_GRAVITY){
+            this.vy += this.speed; // Y velocity
+        }
 
         // Update position based on velocity
         this.x += this.vx;
@@ -57,7 +62,7 @@ class Droplet {
             }
         }
 
-        
+
         // Update the main droplet
         if (!this.splatted) {
             this.createSplatter();
@@ -156,6 +161,7 @@ class Droplet {
 
 }
 
+
 function joinDroplets() {
     //when droplets touch each other, remove them from the array and add a new one in the same position, but adding their sizes
     for (let i = 0; i < droplets.length; i++) {
@@ -166,8 +172,7 @@ function joinDroplets() {
             //get the largest droplet
             let newDroplet = droplet1.size > droplet2.size ? droplet1 : droplet2;
             let secondDroplet = droplet1.size <= droplet2.size ? droplet1 : droplet2;
-            
-            
+
             let distance = Math.sqrt((droplet1.x - droplet2.x) ** 2 + (droplet1.y - droplet2.y) ** 2);
             if (distance < droplet1.size + droplet2.size) {
                 newDroplet.counter += secondDroplet.counter;
@@ -188,16 +193,28 @@ function update() {
     for (let droplet of droplets) {
         droplet.update();
     }
+    removeDropletsOffScreen();
+    createDroplet();
+    joinDroplets();
+}
 
+function removeDropletsOffScreen() {
     if (!BOUNCE_OFF_EDGES) {
+        droplets.filter(function (droplet) {
+            return droplet.y + droplet.size >= CANVAS_HEIGHT
+                || droplet.x + droplet.size >= CANVAS_WIDTH
+                || droplet.y - droplet.size <= 0 || droplet.x - droplet.size <= 0;
+        }).forEach(element => {
+            if (element && element.counter > maxCounter) {
+                maxCounter = element.counter;
+            }
+        });
+
         //when the droplet goes off the screen, remove it from the array
         droplets = droplets.filter(function (droplet) {
             return droplet.y + droplet.size < CANVAS_HEIGHT && droplet.x + droplet.size < CANVAS_WIDTH && droplet.y - droplet.size > 0 && droplet.x - droplet.size > 0;
         });
     }
-
-    createDroplet();
-    joinDroplets();
 }
 
 function createDroplet() {
@@ -229,6 +246,15 @@ function speed(size) {
     return size / 100;
 }
 
+
+function drawCounter() {
+    let canvas = document.getElementById('gameCanvas');
+    let ctx = canvas.getContext('2d');
+    ctx.font = "14px Arial";
+    ctx.fillStyle = "black";
+    ctx.fillText(`TOP SCORE: ${maxCounter} droplets joined`, 10, 30);
+}
+
 function draw() {
     let canvas = document.getElementById('gameCanvas');
     canvas.width = CANVAS_WIDTH;
@@ -240,6 +266,7 @@ function draw() {
     for (let droplet of droplets) {
         droplet.draw(ctx);
     }
+    drawCounter();
 }
 
 window.addEventListener('keydown', function (event) {
@@ -253,16 +280,16 @@ window.addEventListener('keydown', function (event) {
         if (tiltX > MAX_TILT) {
             tiltX = MAX_TILT;
         }
-    // } else if (event.key === 'ArrowUp') {
-    //     tiltY += -1;
-    //     if (tiltY < -MAX_TILT) {
-    //         tiltY = -MAX_TILT;
-    //     }
-    // } else if (event.key === 'ArrowDown') {
-    //     tiltY += 1;
-    //     if (tiltY > MAX_TILT) {
-    //         tiltY = MAX_TILT;
-    //     }
+        } else if (event.key === 'ArrowUp') {
+            tiltY += -1;
+            if (tiltY < -MAX_TILT) {
+                tiltY = -MAX_TILT;
+            }
+        } else if (event.key === 'ArrowDown') {
+            tiltY += 1;
+            if (tiltY > MAX_TILT) {
+                tiltY = MAX_TILT;
+            }
     }
     if (event.key === ' ') {
         droplets.push(new Droplet(rPosX(), rPosY(), rSize()));
@@ -270,12 +297,12 @@ window.addEventListener('keydown', function (event) {
 });
 
 window.addEventListener('keyup', function (event) {
-    if (['ArrowLeft', 'ArrowRight'].includes(event.key)) {
-        tiltX = 0;
-    }
-    if (['ArrowUp', 'ArrowDown'].includes(event.key)) {
-        tiltY = 0;
-    }
+    // if (['ArrowLeft', 'ArrowRight'].includes(event.key)) {
+    //     tiltX = 0;
+    // }
+    // if (['ArrowUp', 'ArrowDown'].includes(event.key)) {
+    //     tiltY = 0;
+    // }
 });
 
 function gameLoop() {
