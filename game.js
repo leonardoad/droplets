@@ -5,10 +5,10 @@ const CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 600;
 const MAX_TILT = 5;
 const BOUNCE_OFF_EDGES = false;
-const MAX_DROPLETS = 3;
+const MAX_DROPLETS = 50;
 
 class Droplet {
-    constructor(x, y, size, counter = 0, splatted = false) {
+    constructor(x, y, size, counter = 1, splatted = false) {
         this.x = x;
         this.y = y;
         this.size = size;
@@ -22,7 +22,7 @@ class Droplet {
     }
     createSplatter() {
         // Create 10 smaller droplets in random directions
-        for (let i = 0; i < 10; i++) {
+        for (let i = 0; i < Math.ceil(this.size*0.5); i++) {
             let speed = Math.random() * 2 + 1; // Random speed between 1 and 3
             let angle = Math.random() * Math.PI * 2; // Random direction
             let splatter = {
@@ -37,8 +37,6 @@ class Droplet {
         this.splatted = true;
     }
     update() {
-
-
 
         // Update velocity based on tilt
         this.updateVel('vy', tiltY);
@@ -166,12 +164,12 @@ function joinDroplets() {
 
             //get the largest droplet
             let newDroplet = droplet1.size > droplet2.size ? droplet1 : droplet2;
-            newDroplet.counter = droplet1.size > droplet2.size ? droplet1.counter : droplet2.counter;
-
-
+            let secondDroplet = droplet1.size <= droplet2.size ? droplet1 : droplet2;
+            
+            
             let distance = Math.sqrt((droplet1.x - droplet2.x) ** 2 + (droplet1.y - droplet2.y) ** 2);
             if (distance < droplet1.size + droplet2.size) {
-                newDroplet.counter++;
+                newDroplet.counter += secondDroplet.counter;
                 let newSize = Math.sqrt(droplet1.size * droplet1.size + droplet2.size * droplet2.size);
                 droplets.splice(i, 1);
                 droplets.splice(j - 1, 1); // j - 1 because we just removed an element at position i
@@ -216,10 +214,7 @@ function rPosY() {
 }
 
 function rSize() {
-    return r(1, 20);
-}
-function rSize() {
-    return r(1, 20);
+    return r(1, 15);
 }
 
 function speed(size) {
