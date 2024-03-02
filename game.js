@@ -414,6 +414,14 @@ if (window.DeviceOrientationEvent) {
     }, true);
 }
 
+let gyroscope = new Gyroscope({ frequency: 60 });
+
+gyroscope.addEventListener("reading", (e) => {
+    if (gyroscope.x) tiltX = gyroscope.x;
+    if (gyroscope.y) tiltY = gyroscope.y;
+});
+gyroscope.start();
+
 function gameLoop() {
     update();
     draw();
