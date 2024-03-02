@@ -127,9 +127,9 @@ class Droplet {
 
     drawDroplet(ctx) {
         let gradient = ctx.createRadialGradient(this.x + this.size * 0.5, this.y + this.size * 0.5, this.size * 0.3, this.x - this.size * 0.4, this.y + this.size * 0.9, this.size * 6.6);
-        gradient.addColorStop(0.1, '#efea63');
-        gradient.addColorStop(0.2, '#8ad000');
-        gradient.addColorStop(0.4, '#83c100');
+        gradient.addColorStop(0.1, '#87ceeb');
+        gradient.addColorStop(0.2, '#69b0cd');
+        gradient.addColorStop(0.4, '#87ceeb');
 
         // Draw the main droplet
         ctx.beginPath();
@@ -139,12 +139,13 @@ class Droplet {
 
     }
     drawShadow(ctx) {
-        // let shadow = ctx.createRadialGradient(this.x * 0.9 , this.y * 0.85, this.size * 0.3, this.x  * 0.9, this.y * 1.3, this.size * 6.6);
+        // Create radial gradient for shadow
         let shadow = ctx.createRadialGradient(this.x, this.y, this.size * 0.3, this.x + this.size * 0.1, this.y - this.size * 0.9, this.size * 6.6);
-        shadow.addColorStop(0.1, '#8ad000');
-        shadow.addColorStop(0.223, '#cade01');
+        shadow.addColorStop(0.1, '#69b0cd');
+        shadow.addColorStop(0.223, '#87ceeb');
+        shadow.addColorStop(1, 'rgba(135, 206, 235, 0)'); // Add this line to create a blur effect
 
-        //Draw the shadow
+        // Draw the shadow
         ctx.beginPath();
         ctx.arc(this.x + this.size * 0.1, this.y + this.size * 0.1, this.size, 0, 2 * Math.PI);
         ctx.fillStyle = shadow;
@@ -167,7 +168,7 @@ class Droplet {
 
     drawCounter(ctx) {
         ctx.font = (this.size * 0.5) + "px Arial";
-        ctx.fillStyle = '#8ad000';
+        ctx.fillStyle = '#69b0cd';
         ctx.fillText(this.getLabel(), this.x - (this.size * 0.2), this.y + (this.size * 0.2));
     }
 
@@ -175,8 +176,8 @@ class Droplet {
         // Draw the splatters
         for (let splatter of this.splatters) {
             let gradient = ctx.createRadialGradient(splatter.x + splatter.size * 0.5, splatter.y + splatter.size * 0.5, splatter.size * 0.3, splatter.x - splatter.size * 0.4, splatter.y + splatter.size * 0.9, splatter.size * 6.6);
-            gradient.addColorStop(0.1, '#efea63');
-            gradient.addColorStop(0.2, '#8ad000');
+            gradient.addColorStop(0.1, '#87ceeb');
+            gradient.addColorStop(0.2, '#69b0cd');
             gradient.addColorStop(0.4, '#83c100');
 
 
@@ -327,6 +328,7 @@ document.getElementById('submitParams').addEventListener('click', function() {
     let inputMinDropletSize = document.getElementById('minDropletSize');
     let inputDropletCreationInterval = document.getElementById('dropletCreationInterval');
     let inputUseGravity = document.getElementById('useGravity');
+    let inputBounceOffEdges = document.getElementById('bounceOffEdges');
     let inputDropletsMaxSpeed = document.getElementById('dropletsMaxSpeed');
 
     // Set game parameters
@@ -335,6 +337,7 @@ document.getElementById('submitParams').addEventListener('click', function() {
     if (inputMinDropletSize.value) MIN_DROPLET_SIZE = parseInt(inputMinDropletSize.value);
     if (inputDropletCreationInterval.value) DROPLET_CREATION_INTERVAL = parseInt(inputDropletCreationInterval.value);
     if (inputUseGravity.value) USE_GRAVITY = inputUseGravity.checked;
+    if (inputBounceOffEdges.value) BOUNCE_OFF_EDGES = inputBounceOffEdges.checked;
     if (inputDropletsMaxSpeed.value) DROPLETS_MAX_SPEED = parseInt(inputDropletsMaxSpeed.value);
 });
 
