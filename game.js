@@ -141,10 +141,10 @@ class Droplet {
         // Depending on the direction of the tilt, modify only one side of the droplet
         let elongationX = 0;
         let elongationY = 0;
-        if (tiltX != 0) {
+        if (this.vx != 0) {
             elongationX = Math.abs(this.vx);
             elongationY = -Math.abs(this.vx);
-        } else if (tiltY != 0) {
+        } else if (this.vy != 0) {
             elongationY = Math.abs(this.vy);
             elongationX = -Math.abs(this.vy);
         }
