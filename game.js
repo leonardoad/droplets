@@ -334,19 +334,6 @@ window.addEventListener('keyup', function (event) {
     }
 });
 
-document.getElementById('leftButton').addEventListener('click', function () {
-    tiltX += -1;
-});
-document.getElementById('rightButton').addEventListener('click', function () {
-    tiltX += 1;
-});
-document.getElementById('upButton').addEventListener('click', function () {
-    tiltY += -1;
-});
-document.getElementById('downButton').addEventListener('click', function () {
-    tiltY += 1;
-});
-
 document.getElementById('restartButton').addEventListener('click', function () {
     // Reset game state
     droplets = [];
@@ -404,6 +391,19 @@ window.addEventListener('load', function (event) {
         if (targetElement) {
             targetElement.textContent = slider.value;
         }
+    });
+    
+    document.getElementById('leftButton').addEventListener('click', function () {
+        tiltX += -1;
+    });
+    document.getElementById('rightButton').addEventListener('click', function () {
+        tiltX += 1;
+    });
+    document.getElementById('upButton').addEventListener('click', function () {
+        tiltY += -1;
+    });
+    document.getElementById('downButton').addEventListener('click', function () {
+        tiltY += 1;
     });
 });
 
