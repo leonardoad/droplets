@@ -11,6 +11,8 @@ let DROPLET_CREATION_INTERVAL = 100000;
 let DROPLETS_MAX_SPEED = 12;
 let USE_GRAVITY = false;
 let BOUNCE_OFF_EDGES = false;
+let TIME = 30;
+let GOAL = 10;
 
 class Droplet {
     constructor(x, y, size, counter = 1, splatted = false, shouldGrow = true) {
@@ -285,6 +287,13 @@ function speed(size) {
     return size / 100;
 }
 
+function win() {
+    return maxCounter >= GOAL;
+}
+
+function gameOver() {
+    return TIME <= 0 || win();
+}
 
 function drawCounter() {
     let canvas = document.getElementById('gameCanvas');
@@ -294,6 +303,29 @@ function drawCounter() {
     ctx.fillText(`TOP SCORE: ${maxCounter} droplets joined`, 10, 30);
     ctx.fillText(`Droplets: ${droplets.length}`, 10, 50);
     ctx.fillText(`Tilt: : ${tiltX}x - ${tiltY}y`, 10, 70);
+    ctx.fillText(`Gravity: ${USE_GRAVITY ? 'ON' : 'OFF'}`, 10, 90);
+    ctx.fillText(`Bounce: ${BOUNCE_OFF_EDGES ? 'ON' : 'OFF'}`, 10, 110);
+    ctx.fillText(`Max Speed: ${DROPLETS_MAX_SPEED}`, 10, 130);
+    ctx.fillText(`Time: ${TIME}`, 10, 150);
+    ctx.fillText(`Goal: ${GOAL}`, 10, 170);
+
+    if (gameOver()) {
+        ctx.font = "30px Arial";
+
+        ctx.fillStyle = win() ? "green" : "red";
+        ctx.fillText(`GAME OVER`, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
+
+        if (win()) {
+            ctx.fillStyle = "green";
+            ctx.fillText(`You win!`, CANVAS_WIDTH / 2 + 40, CANVAS_HEIGHT / 2 + 30);
+        }
+
+        if (maxCounter > 0) {
+            ctx.font = "20px Arial";
+            ctx.fillStyle = "black";
+            ctx.fillText(`You joined ${maxCounter} droplets`, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 60);
+        }
+    }
 }
 
 function draw() {
@@ -307,10 +339,20 @@ function draw() {
     for (let droplet of droplets) {
         droplet.draw(ctx);
     }
+
     drawCounter();
 }
 
+setInterval(function () {
+    if (TIME > 0) {
+        TIME--;
+    }
+}, 1000);
+
 window.addEventListener('keydown', function (event) {
+    if (gameOver()) {
+        return;
+    }
     if (['ArrowLeft', 'a'].includes(event.key)) {
         tiltX += -1;
     } else if (['d', 'ArrowRight'].includes(event.key)) {
@@ -414,6 +456,9 @@ window.addEventListener('load', function (event) {
             USE_GRAVITY = level.useGravity;
             BOUNCE_OFF_EDGES = level.bounceOffEdges;
             DROPLETS_MAX_SPEED = level.dropletsMaxSpeed;
+            TIME = level.time;
+            GOAL = level.goal;
+
             resetGame();
         });
     });
@@ -422,21 +467,25 @@ window.addEventListener('load', function (event) {
 const levels = {
     easy: {
         maxDroplets: 22,
-        minDropletSize: 5,
-        maxDropletSize: 16,
+        minDropletSize: 20,
+        maxDropletSize: 46,
         dropletCreationInterval: 1000,
         useGravity: false,
         bounceOffEdges: false,
         dropletsMaxSpeed: 12,
+        time: 30,
+        goal: 10,
     },
     medium: {
         maxDroplets: 20,
-        maxDropletSize: 15,
-        minDropletSize: 5,
+        minDropletSize: 10,
+        maxDropletSize: 35,
         dropletCreationInterval: 500,
         useGravity: false,
         bounceOffEdges: false,
         dropletsMaxSpeed: 15,
+        time: 20,
+        goal: 20,
     },
     hard: {
         maxDroplets: 30,
@@ -446,6 +495,8 @@ const levels = {
         useGravity: true,
         bounceOffEdges: false,
         dropletsMaxSpeed: 20,
+        time: 10,
+        goal: 30,
     }
 };
 
@@ -455,7 +506,7 @@ function resetGame() {
     droplets = [];
     tiltX = 0;
     tiltY = 0;
-    maxCounter = 0;
+    maxCounter = 0; 
 }
 
 function gameLoop() {
