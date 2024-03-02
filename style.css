@@ -6,12 +6,12 @@ body {
 canvas {
   display: block;
   margin: 0 auto;
-  border: solid 2px #000;
+  width: 100%;
 }
 
 .canvas-container {
   background: linear-gradient(to bottom, #87ceeb, #78bfdc, #69b0cd, #96ddfa);
-  width: fit-content;
+  max-width: 100%;
   margin: 0 auto;
 }
 

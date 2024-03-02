@@ -2,7 +2,7 @@ let droplets = [];
 let tiltX = 0;
 let tiltY = 0;
 let maxCounter = 0;
-const CANVAS_WIDTH = 800;
+let CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 600;
 let BOUNCE_OFF_EDGES = false;
 let MAX_DROPLETS = 16;
@@ -271,10 +271,10 @@ function r(min, max) {
     return Math.random() * (max - min) + min;
 }
 function rPosX() {
-    return r(0, CANVAS_HEIGHT);
+    return r(0, CANVAS_WIDTH);
 }
 function rPosY() {
-    return r(0, CANVAS_WIDTH);
+    return r(0, CANVAS_HEIGHT);
 }
 
 function rSize() {
@@ -364,6 +364,8 @@ document.querySelectorAll('[data-slider-target]').forEach(function (slider) {
 });
 
 window.addEventListener('load', function (event) {
+    CANVAS_WIDTH = window.innerWidth;
+
     // Set initial input values
     document.getElementById('maxDroplets').value = MAX_DROPLETS;
     document.getElementById('maxDropletSize').value = MAX_DROPLET_SIZE;
