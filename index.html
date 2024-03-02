@@ -7,121 +7,102 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
     <link rel="stylesheet" href="style.css">
-    <style>
-        .mobile-controller {
-            border-radius: 20px;
-            background-color: rgba(0, 0, 0, 0.5);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            flex-wrap: wrap;
-            width: 200px;
-            height: 200px;
-            margin: 0 auto;
-            position: fixed;
-            bottom: 10px;
-            right: 10px;
-        }
-
-        .mobile-controller button {
-            width: 60px;
-            height: 50px;
-            border-radius: 20px;
-            margin: 10px;
-            position: relative;
-        }
-
-        #downButton, 
-        #upButton {
-            width: 90%;
-        }
-
-        #leftButton,
-        #rightButton {
-            width: 43%;
-        }
-
-        #leftButton {
-            margin-right: auto;
-        }
-
-        #rightButton {
-            margin-left: auto;
-        }
-        @media screen and (max-width: 768px) {
-            .mobile-controller {
-                display: block;
-            }
-        }
-    </style>
 </head>
 
 <body>
+    <div id="menu">
+        <div>
+            <a href="#settingsButton" class="btn btn-secondary float-right" data-toggle="settingsContent">Settings</a>
+            <a href="#levelButton" class="btn btn-primary float-right levelButton mx-2"
+                data-toggle="levelContent">Select Level</a>
+        </div>
 
+        <div>
+            <div class="card" id="settingsContent" style="display: none;">
+                <form id="gameParameters" class="container" onsubmit="return false">
+                    <div class="card-body">
+                        <h5 class="card-title text-center">Game Parameters</h5>
+                        <div class="form-group">
+                            <label for="maxDroplets">Droplets Quantity: <span id="maxDropletsValue"></span></label>
+                            <input type="range" id="maxDroplets" name="maxDroplets"
+                                data-slider-target="maxDropletsValue" min="1" max="200" value="100"
+                                class="form-control-range"><br>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="minDropletSize">Min Droplet Size: <span id="minDropletSizeValue"></span></label>
+                            <input type="range" id="minDropletSize" name="minDropletSize"
+                                data-slider-target="minDropletSizeValue" min="1" max="50" value="100"
+                                class="form-control-range"><br>
+                        </div>
+                        <div class="form-group">
+                            <label for="maxDropletSize">Max Droplet Size: <span id="maxDropletSizeValue"></span></label>
+                            <input type="range" id="maxDropletSize" name="maxDropletSize"
+                                data-slider-target="maxDropletSizeValue" min="1" max="50" value="100"
+                                class="form-control-range"><br>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="dropletCreationInterval">Droplet Creation Interval: <span
+                                    id="dropletCreationIntervalValue"></span></label>
+                            <input type="range" id="dropletCreationInterval" name="dropletCreationInterval"
+                                data-slider-target="dropletCreationIntervalValue" min="10000" max="200000"
+                                value="100000" class="form-control-range"><br>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="dropletsMaxSpeed">Droplets Max Speed: <span
+                                    id="dropletsMaxSpeedValue"></span></label>
+                            <input type="range" id="dropletsMaxSpeed" name="dropletsMaxSpeed"
+                                data-slider-target="dropletsMaxSpeedValue" min="1" max="20" value="10"
+                                class="form-control-range"><br>
+                        </div>
+
+                        <div class="form-group form-check">
+                            <input type="checkbox" id="useGravity" name="useGravity" class="form-check-input">
+                            <label class="form-check-label" for="useGravity">Use Gravity</label><br>
+                        </div>
+
+                        <div class="form-group form-check">
+                            <input type="checkbox" id="bounceOffEdges" value="true" name="bounceOffEdges"
+                                class="form-check-input">
+                            <label class="form-check-label" for="bounceOffEdges">Bounce Off Edges</label><br>
+                        </div>
+
+                    </div>
+                    <div class="card-footer">
+                        <a href="#parameters" class="btn btn-secondary float-right"
+                            data-toggle="settingsContent">Close</a>
+                        <button id="restartButton" class="btn btn-secondary">Restart Game</button>
+                        <button id="submitParams" value="Submit" class="btn btn-primary">Save</button>
+
+                    </div>
+                </form>
+            </div>
+            <div class="card" id="levelContent" style="display: none;">
+                <div class="card-body">
+                    <h5 class="card-title
+                    text-center">Select Level</h5>
+                    <div class="form-group
+                    text-center">
+                        <button data-level="easy" class="btn btn-primary" data-toggle="levelContent">Level 1</button>
+                        <button data-level="medium" class="btn btn-primary" data-toggle="levelContent">Level 2</button>
+                        <button data-level="hard" class="btn btn-primary" data-toggle="levelContent">Level 3</button>
+
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
     <h1 class="text-center">Droplets Game</h1>
-    <p class="text-center">Use the arrows to move the droplets on the window</p>
+    <p class="text-center">Use the arrows or AWSD to move the droplets on the window</p>
     <p class="text-center">Press <i>space</i> to create a new droplets</p>
 
     <div class="canvas-container">
         <canvas id="gameCanvas"></canvas>
     </div>
-
-    <div class="mobile-controller">
-        <button id="upButton" class="btn btn-secondary">Up</button>
-        <button id="leftButton" class="btn btn-secondary">Left</button>
-        <button id="rightButton" class="btn btn-secondary">Right</button>
-        <button id="downButton" class="btn btn-secondary">Down</button>
-    </div>
-
-    <form id="gameParameters" class="container" onsubmit="return false">
-        <p class="text-center">Use the form to change the game parameters</p>
-
-
-        <div class="form-group">
-            <label for="maxDroplets">Droplets Quantity: <span id="maxDropletsValue"></span></label>
-            <input type="range" id="maxDroplets" name="maxDroplets" data-slider-target="maxDropletsValue" min="1"
-                max="200" value="100" class="form-control-range"><br>
-        </div>
-
-        <div class="form-group">
-            <label for="minDropletSize">Min Droplet Size: <span id="minDropletSizeValue"></span></label>
-            <input type="range" id="minDropletSize" name="minDropletSize" data-slider-target="minDropletSizeValue"
-                min="1" max="50" value="100" class="form-control-range"><br>
-        </div>
-        <div class="form-group">
-            <label for="maxDropletSize">Max Droplet Size: <span id="maxDropletSizeValue"></span></label>
-            <input type="range" id="maxDropletSize" name="maxDropletSize" data-slider-target="maxDropletSizeValue"
-                min="1" max="50" value="100" class="form-control-range"><br>
-        </div>
-
-        <div class="form-group">
-            <label for="dropletCreationInterval">Droplet Creation Interval: <span
-                    id="dropletCreationIntervalValue"></span></label>
-            <input type="range" id="dropletCreationInterval" name="dropletCreationInterval"
-                data-slider-target="dropletCreationIntervalValue" min="10000" max="200000" value="100000"
-                class="form-control-range"><br>
-        </div>
-
-        <div class="form-group">
-            <label for="dropletsMaxSpeed">Droplets Max Speed: <span id="dropletsMaxSpeedValue"></span></label>
-            <input type="range" id="dropletsMaxSpeed" name="dropletsMaxSpeed" data-slider-target="dropletsMaxSpeedValue"
-                min="1" max="20" value="10" class="form-control-range"><br>
-        </div>
-
-        <div class="form-group form-check">
-            <input type="checkbox" id="useGravity" name="useGravity" class="form-check-input">
-            <label class="form-check-label" for="useGravity">Use Gravity</label><br>
-        </div>
-
-        <div class="form-group form-check">
-            <input type="checkbox" id="bounceOffEdges" value="true" name="bounceOffEdges" class="form-check-input">
-            <label class="form-check-label" for="bounceOffEdges">Bounce Off Edges</label><br>
-        </div>
-
-        <button id="submitParams" value="Submit" class="btn btn-primary">Save</button>
-        <button id="restartButton" class="btn btn-secondary">Restart Game</button>
-    </form>
-    <!-- <div class="droplet"></div> -->
     <script src="game.js"></script>
 </body>
 

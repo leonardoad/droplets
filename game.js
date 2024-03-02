@@ -3,14 +3,14 @@ let tiltX = 0;
 let tiltY = 0;
 let maxCounter = 0;
 let CANVAS_WIDTH = 800;
-const CANVAS_HEIGHT = 600;
-let BOUNCE_OFF_EDGES = false;
-let MAX_DROPLETS = 16;
+let CANVAS_HEIGHT = 600;
+let MAX_DROPLETS = 22;
 let MIN_DROPLET_SIZE = 5;
 let MAX_DROPLET_SIZE = 16;
 let DROPLET_CREATION_INTERVAL = 100000;
-let USE_GRAVITY = true;
-let DROPLETS_MAX_SPEED = 1;
+let DROPLETS_MAX_SPEED = 12;
+let USE_GRAVITY = false;
+let BOUNCE_OFF_EDGES = false;
 
 class Droplet {
     constructor(x, y, size, counter = 1, splatted = false, shouldGrow = true) {
@@ -311,13 +311,13 @@ function draw() {
 }
 
 window.addEventListener('keydown', function (event) {
-    if (event.key === 'ArrowLeft') {
+    if (['ArrowLeft', 'a'].includes(event.key)) {
         tiltX += -1;
-    } else if (event.key === 'ArrowRight') {
+    } else if (['d', 'ArrowRight'].includes(event.key)) {
         tiltX += 1;
-    } else if (event.key === 'ArrowUp') {
+    } else if (['ArrowUp', 'w'].includes(event.key)) {
         tiltY += -1;
-    } else if (event.key === 'ArrowDown') {
+    } else if (['s', 'ArrowDown'].includes(event.key)) {
         tiltY += 1;
     }
     if (event.key === ' ') {
@@ -326,20 +326,17 @@ window.addEventListener('keydown', function (event) {
 });
 
 window.addEventListener('keyup', function (event) {
-    if (['ArrowLeft', 'ArrowRight'].includes(event.key)) {
+    if (['ArrowLeft', 'ArrowRight', 'a', 'd'].includes(event.key)) {
         tiltX = 0;
     }
-    if (['ArrowUp', 'ArrowDown'].includes(event.key)) {
+    if (['ArrowUp', 'ArrowDown', 'w', 's'].includes(event.key)) {
         tiltY = 0;
     }
 });
 
 document.getElementById('restartButton').addEventListener('click', function () {
     // Reset game state
-    droplets = [];
-    tiltX = 0;
-    tiltY = 0;
-    maxCounter = 0;
+    resetGame();
 });
 
 document.getElementById('submitParams').addEventListener('click', function () {
@@ -360,6 +357,8 @@ document.getElementById('submitParams').addEventListener('click', function () {
     if (inputUseGravity.value) USE_GRAVITY = inputUseGravity.checked;
     if (inputBounceOffEdges.value) BOUNCE_OFF_EDGES = inputBounceOffEdges.checked;
     if (inputDropletsMaxSpeed.value) DROPLETS_MAX_SPEED = parseInt(inputDropletsMaxSpeed.value);
+
+    resetGame();
 });
 
 document.querySelectorAll('[data-slider-target]').forEach(function (slider) {
@@ -374,6 +373,7 @@ document.querySelectorAll('[data-slider-target]').forEach(function (slider) {
 
 window.addEventListener('load', function (event) {
     CANVAS_WIDTH = window.innerWidth;
+    CANVAS_HEIGHT = window.innerHeight;
 
     // Set initial input values
     document.getElementById('maxDroplets').value = MAX_DROPLETS;
@@ -392,21 +392,71 @@ window.addEventListener('load', function (event) {
             targetElement.textContent = slider.value;
         }
     });
-    
-    document.getElementById('leftButton').addEventListener('click', function () {
-        tiltX += -1;
+    document.querySelectorAll('[data-toggle]').forEach(function (element) {
+        element.addEventListener('click', function () {
+            let targetId = this.getAttribute('data-toggle');
+            let targetElement = document.getElementById(targetId);
+            if (targetElement.style.display === "none") {
+                targetElement.style.display = "block";
+            } else {
+                targetElement.style.display = "none";
+            }
+        });
     });
-    document.getElementById('rightButton').addEventListener('click', function () {
-        tiltX += 1;
-    });
-    document.getElementById('upButton').addEventListener('click', function () {
-        tiltY += -1;
-    });
-    document.getElementById('downButton').addEventListener('click', function () {
-        tiltY += 1;
+    document.querySelectorAll('[data-level]').forEach(function (element) {
+        element.addEventListener('click', function () {
+            let targetLevel = this.getAttribute('data-level');
+            let level = levels[targetLevel];
+            MAX_DROPLETS = level.maxDroplets;
+            MAX_DROPLET_SIZE = level.maxDropletSize;
+            MIN_DROPLET_SIZE = level.minDropletSize;
+            DROPLET_CREATION_INTERVAL = level.dropletCreationInterval;
+            USE_GRAVITY = level.useGravity;
+            BOUNCE_OFF_EDGES = level.bounceOffEdges;
+            DROPLETS_MAX_SPEED = level.dropletsMaxSpeed;
+            resetGame();
+        });
     });
 });
 
+const levels = {
+    easy: {
+        maxDroplets: 22,
+        minDropletSize: 5,
+        maxDropletSize: 16,
+        dropletCreationInterval: 1000,
+        useGravity: false,
+        bounceOffEdges: false,
+        dropletsMaxSpeed: 12,
+    },
+    medium: {
+        maxDroplets: 20,
+        maxDropletSize: 15,
+        minDropletSize: 5,
+        dropletCreationInterval: 500,
+        useGravity: false,
+        bounceOffEdges: false,
+        dropletsMaxSpeed: 15,
+    },
+    hard: {
+        maxDroplets: 30,
+        maxDropletSize: 20,
+        minDropletSize: 5,
+        dropletCreationInterval: 250,
+        useGravity: true,
+        bounceOffEdges: false,
+        dropletsMaxSpeed: 20,
+    }
+};
+
+
+
+function resetGame() {
+    droplets = [];
+    tiltX = 0;
+    tiltY = 0;
+    maxCounter = 0;
+}
 
 function gameLoop() {
     update();
