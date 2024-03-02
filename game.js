@@ -9,8 +9,8 @@ let MAX_DROPLETS = 16;
 let MIN_DROPLET_SIZE = 5;
 let MAX_DROPLET_SIZE = 16;
 let DROPLET_CREATION_INTERVAL = 100000;
-let USE_GRAVITY = false;
-let DROPLETS_MAX_SPEED = 10;
+let USE_GRAVITY = true;
+let DROPLETS_MAX_SPEED = 1;
 
 class Droplet {
     constructor(x, y, size, counter = 1, splatted = false, shouldGrow = true) {
@@ -392,6 +392,27 @@ window.addEventListener('keyup', function (event) {
         tiltY = 0;
     }
 });
+
+if (window.DeviceOrientationEvent) {
+    window.addEventListener("deviceorientation", function (event) {
+        console.log(`event.beta, event.gamma`, event.beta, event.gamma);
+        if (event.gamma) tiltX = event.gamma; // range [-90,90], left-right tilt
+        if (event.beta) tiltY = event.beta;  // range [-180,180], front-back tilt
+    }, true);
+} else if (window.DeviceMotionEvent) {
+    window.addEventListener('devicemotion', function (event) {
+        console.log(`event`, event);
+        if (event.acceleration.x) tiltX = event.acceleration.x;
+        if (event.acceleration.y) tiltY = event.acceleration.y;
+
+    }, true);
+} else {
+    window.addEventListener("MozOrientation", function (orientation) {
+        console.log(`orientation`, orientation);
+        if (orientation.x) tiltX = orientation.x;
+        if (orientation.y) tiltY = orientation.y;
+    }, true);
+}
 
 function gameLoop() {
     update();
