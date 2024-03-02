@@ -4,12 +4,13 @@ let tiltY = 0;
 let maxCounter = 0;
 const CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 600;
-const MAX_TILT = 5;
-const BOUNCE_OFF_EDGES = false;
-const MAX_DROPLETS = 100;
-const DROPLET_CREATION_INTERVAL = 100000;
-const USE_GRAVITY = false;
-const DROPLETS_MAX_SPEED = 10;
+let BOUNCE_OFF_EDGES = false;
+let MAX_DROPLETS = 1;
+let MAX_DROPLET_SIZE = 15;
+let MIN_DROPLET_SIZE = 1;
+let DROPLET_CREATION_INTERVAL = 100000;
+let USE_GRAVITY = false;
+let DROPLETS_MAX_SPEED = 10;
 
 class Droplet {
     constructor(x, y, size, counter = 1, splatted = false, shouldGrow = true) {
@@ -21,7 +22,7 @@ class Droplet {
         this.speed = speed(size);
         this.vx = tiltX * this.speed; // x velocity
         this.vy = tiltY * this.speed; // y velocity
-        this.maxSpeed = size / DROPLETS_MAX_SPEED;
+        this.maxSpeed = size / 50 * DROPLETS_MAX_SPEED;
         this.counter = counter;
         this.splatters = [];
         this.splatted = splatted;
@@ -66,6 +67,9 @@ class Droplet {
             return splatter.size > 0.5;
         });
     }
+    getLabel() {
+        return `${this.counter}`;
+    }
     moveDroplet() {
         // Update velocity based on tilt
         this.updateVel('vy', tiltY);
@@ -79,15 +83,6 @@ class Droplet {
         this.x += this.vx;
         this.y += this.vy;
 
-        if (BOUNCE_OFF_EDGES) {
-            // Bounce off the edges of the screen
-            if (this.x < 0 || this.x > CANVAS_WIDTH) {
-                this.vx = -this.vx;
-            }
-            if (this.y < 0 || this.y > CANVAS_HEIGHT) {
-                this.vy = -this.vy;
-            }
-        }
     }
     growDroplet() {
         // If the droplet is still growing and hasn't reached its final size
@@ -101,15 +96,25 @@ class Droplet {
         }
     }
     updateVel(prop, tilt) {
-        this[prop] += tilt * (this.speed);
+
+        this[prop] += tilt * (this.speed) + (Math.random() * 0.3 - 0.1);
         if (tilt === 0) {
-            this[prop] = tilt * this.speed + (Math.random() * 0.3 - 0.1);
+            this[prop] = tilt * this.speed;
         }
         if (this[prop] > this.maxSpeed) {
             this[prop] = this.maxSpeed;
         }
         if (this[prop] < -this.maxSpeed) {
             this[prop] = -this.maxSpeed;
+        }
+        
+        if (BOUNCE_OFF_EDGES) {
+            const pos = prop === 'vx' ? 'x' : 'y';
+            const canvas = prop === 'vx' ? CANVAS_WIDTH : CANVAS_HEIGHT;
+            // Bounce off the edges of the screen
+            if (this[pos] - this.size < 0 || this[pos] + this.size > canvas) {
+                this[prop] = -this[prop];
+            }
         }
     }
     draw(ctx) {
@@ -163,7 +168,7 @@ class Droplet {
     drawCounter(ctx) {
         ctx.font = (this.size * 0.5) + "px Arial";
         ctx.fillStyle = '#8ad000';
-        ctx.fillText(this.counter, this.x - (this.size * 0.2), this.y + (this.size * 0.2));
+        ctx.fillText(this.getLabel(), this.x - (this.size * 0.2), this.y + (this.size * 0.2));
     }
 
     drawSplatters(ctx) {
@@ -262,7 +267,7 @@ function rPosY() {
 }
 
 function rSize() {
-    return r(1, 15);
+    return r(1, MAX_DROPLET_SIZE);
 }
 
 function speed(size) {
@@ -295,30 +300,53 @@ function draw() {
 window.addEventListener('keydown', function (event) {
     if (event.key === 'ArrowLeft') {
         tiltX += -1;
-        if (tiltX < -MAX_TILT) {
-            tiltX = -MAX_TILT;
-        }
     } else if (event.key === 'ArrowRight') {
         tiltX += 1;
-        if (tiltX > MAX_TILT) {
-            tiltX = MAX_TILT;
-        }
     } else if (event.key === 'ArrowUp') {
         tiltY += -1;
-        if (tiltY < -MAX_TILT) {
-            tiltY = -MAX_TILT;
-        }
     } else if (event.key === 'ArrowDown') {
         tiltY += 1;
-        if (tiltY > MAX_TILT) {
-            tiltY = MAX_TILT;
-        }
     }
     if (event.key === ' ') {
         droplets.push(new Droplet(rPosX(), rPosY(), rSize()));
     }
 });
 
+document.getElementById('restartButton').addEventListener('click', function() {
+    // Reset game state
+    droplets = [];
+    tiltX = 0;
+    tiltY = 0;
+    maxCounter = 0;
+});
+
+document.getElementById('submitParams').addEventListener('click', function() {
+    // Get game parameters from input fields
+    let inputMaxDroplets = document.getElementById('maxDroplets');
+    let inputMaxDropletSize = document.getElementById('maxDropletSize');
+    let inputMinDropletSize = document.getElementById('minDropletSize');
+    let inputDropletCreationInterval = document.getElementById('dropletCreationInterval');
+    let inputUseGravity = document.getElementById('useGravity');
+    let inputDropletsMaxSpeed = document.getElementById('dropletsMaxSpeed');
+
+    // Set game parameters
+    if (inputMaxDroplets.value) MAX_DROPLETS = parseInt(inputMaxDroplets.value);
+    if (inputMaxDropletSize.value) MAX_DROPLET_SIZE = parseInt(inputMaxDropletSize.value);
+    if (inputMinDropletSize.value) MIN_DROPLET_SIZE = parseInt(inputMinDropletSize.value);
+    if (inputDropletCreationInterval.value) DROPLET_CREATION_INTERVAL = parseInt(inputDropletCreationInterval.value);
+    if (inputUseGravity.value) USE_GRAVITY = inputUseGravity.checked;
+    if (inputDropletsMaxSpeed.value) DROPLETS_MAX_SPEED = parseInt(inputDropletsMaxSpeed.value);
+});
+
+document.querySelectorAll('[data-slider-target]').forEach(function(slider) {
+    slider.addEventListener('input', function() {
+        let targetId = this.getAttribute('data-slider-target');
+        let targetElement = document.getElementById(targetId);
+        if (targetElement) {
+            targetElement.textContent = this.value;
+        }
+    });
+});
 window.addEventListener('keyup', function (event) {
     // if (['ArrowLeft', 'ArrowRight'].includes(event.key)) {
     //     tiltX = 0;

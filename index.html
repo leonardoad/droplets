@@ -3,6 +3,7 @@
 <html>
     <header>
         <title>Simple Game</title>
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
         <style>
             body {
                 margin: 0;
@@ -13,7 +14,7 @@
                 margin: 0 auto;
                 border: solid 2px #000;
             }
-            body {
+            .canvas-container {
                 background-color: #cade01;
             }
             :root{
@@ -59,9 +60,48 @@
     </header>
 <body>
     <div class="canvas-container">
+        <canvas id="gameCanvas" ></canvas>
     </div>
-    <canvas id="gameCanvas" ></canvas>
-    <button id="restartButton" onclick="restartGame()">Restart Game</button>
+    <form id="gameParameters" class="container" onsubmit="return false">
+    
+    
+        <div class="form-group">
+            <label for="maxDroplets">Droplets Quantity: <span id="maxDropletsValue"></span></label>
+            <input type="range" id="maxDroplets" name="maxDroplets" data-slider-target="maxDropletsValue" min="1" max="200" value="100" class="form-control-range"><br>
+        </div>
+    
+        <div class="form-group">
+            <label for="minDropletSize">Min Droplet Size: <span id="minDropletSizeValue"></span></label>
+            <input type="range" id="minDropletSize" name="minDropletSize" data-slider-target="minDropletSizeValue" min="1" max="50" value="100" class="form-control-range"><br>
+        </div>
+        <div class="form-group">
+            <label for="maxDropletSize">Max Droplet Size: <span id="maxDropletSizeValue"></span></label>
+            <input type="range" id="maxDropletSize" name="maxDropletSize" data-slider-target="maxDropletSizeValue" min="1" max="50" value="100" class="form-control-range"><br>
+        </div>
+    
+        <div class="form-group">
+            <label for="dropletCreationInterval">Droplet Creation Interval: <span id="dropletCreationIntervalValue"></span></label>
+            <input type="range" id="dropletCreationInterval" name="dropletCreationInterval" data-slider-target="dropletCreationIntervalValue" min="10000" max="200000" value="100000" class="form-control-range"><br>
+        </div>
+    
+        <div class="form-group">
+            <label for="dropletsMaxSpeed">Droplets Max Speed: <span id="dropletsMaxSpeedValue"></span></label>
+            <input type="range" id="dropletsMaxSpeed" name="dropletsMaxSpeed" data-slider-target="dropletsMaxSpeedValue" min="1" max="20" value="10" class="form-control-range"><br>
+        </div>
+    
+        <div class="form-group form-check">
+            <input type="checkbox" id="useGravity" name="useGravity" class="form-check-input">
+            <label class="form-check-label" for="useGravity">Use Gravity</label><br>
+        </div>
+        
+        <div class="form-group form-check">
+            <input type="checkbox" id="bounceOffEdges" value="true" name="bounceOffEdges" class="form-check-input">
+            <label class="form-check-label" for="bounceOffEdges">Bounce Off Edges</label><br>
+        </div>
+    
+        <input id="submitParams" value="Submit" class="btn btn-primary">
+        <button id="restartButton" class="btn btn-secondary" >Restart Game</button>
+    </form>
     <!-- <div class="droplet"></div> -->
     <script src="game.js"></script>
 </body>
