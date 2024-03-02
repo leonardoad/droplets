@@ -5,11 +5,11 @@ let maxCounter = 0;
 const CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 600;
 let BOUNCE_OFF_EDGES = false;
-let MAX_DROPLETS = 1;
+let MAX_DROPLETS = 16;
 let MIN_DROPLET_SIZE = 5;
-let MAX_DROPLET_SIZE = 15;
+let MAX_DROPLET_SIZE = 16;
 let DROPLET_CREATION_INTERVAL = 100000;
-let USE_GRAVITY = true;
+let USE_GRAVITY = false;
 let DROPLETS_MAX_SPEED = 10;
 
 class Droplet {
@@ -92,15 +92,15 @@ class Droplet {
         }
     }
     updateVel(prop, tilt) {
-        if(tilt != 0) {
+        if (tilt != 0) {
             let r = Math.random() * 1.9 - 0.1;
             this[prop] += tilt * (this.speed + r);
-        } else if (USE_GRAVITY && prop === 'vy' ) {
+        } else if (USE_GRAVITY && prop === 'vy') {
             this.vy += Math.abs(this.vy) + this.speed + (Math.random() * 0.9 - 0.2); // Y velocity
         } else {
             this[prop] = 0;
         }
-        
+
         if (this[prop] > this.maxSpeed) {
             this[prop] = this.maxSpeed;
         }
@@ -132,10 +132,25 @@ class Droplet {
 
         // Draw the main droplet
         ctx.beginPath();
-        ctx.arc(this.x, this.y, this.size, 0, 2 * Math.PI);
+        this.getEllipse(ctx);
         ctx.fillStyle = gradient;
         ctx.fill();
+    }
+    getEllipse(ctx, shadow = false) {
+        // Modify the shape of the droplet based on its speed
+        // Depending on the direction of the tilt, modify only one side of the droplet
+        let elongationX = 0;
+        let elongationY = 0;
+        if (tiltX != 0) {
+            elongationX = Math.abs(this.vx);
+            elongationY = -Math.abs(this.vx);
+        } else if (tiltY != 0) {
+            elongationY = Math.abs(this.vy);
+            elongationX = -Math.abs(this.vy);
+        }
+        let reposition = shadow ? this.size * 0.1 : 0;
 
+        ctx.ellipse(this.x + reposition, this.y + reposition, Math.abs(this.size + elongationX), Math.abs(this.size + elongationY), 0, 0, 2 * Math.PI);
     }
     drawShadow(ctx) {
         // Create radial gradient for shadow
@@ -146,21 +161,26 @@ class Droplet {
 
         // Draw the shadow
         ctx.beginPath();
-        ctx.arc(this.x + this.size * 0.1, this.y + this.size * 0.1, this.size, 0, 2 * Math.PI);
+        // ctx.arc(this.x + this.size * 0.1, this.y + this.size * 0.1, this.size, 0, 2 * Math.PI);
+        this.getEllipse(ctx, true);
         ctx.fillStyle = shadow;
         ctx.fill();
 
     }
     drawReflection(ctx) {
+
+        let repositionY = tiltY != 0 ? -this.size * 0.1 : tiltX != 0 ? this.size * 0.1 : 0;
         // Draw the ::before pseudo-element
         ctx.beginPath();
-        ctx.arc(this.x - this.size / 1.7, this.y - this.size / 2.2, this.size / 17, 0, 2 * Math.PI);
+        ctx.arc(this.x - this.size / 1.7, this.y - this.size / 2.2 + repositionY, this.size / 17, 0, 2 * Math.PI);
         ctx.fillStyle = '#f4f1f49f';
         ctx.fill();
 
+
+        let rotation = tiltY != 0 ? Math.PI / 4 : tiltX != 0 ? Math.PI / 2.8 : Math.PI / 3;
         // Draw the ::after pseudo-element
         ctx.beginPath();
-        ctx.ellipse(this.x - this.size / 3.9, this.y - this.size / 1.4, this.size / 10, this.size / 4, Math.PI / 3, 0, 2 * Math.PI);
+        ctx.ellipse(this.x - this.size / 3.9, this.y - this.size / 1.4 + repositionY, this.size / 10, this.size / 4, rotation, 0, 2 * Math.PI);
         ctx.fillStyle = '#f4f1f49f';
         ctx.fill();
     }
@@ -204,7 +224,7 @@ function joinDroplets() {
             let distance = Math.sqrt((droplet1.x - droplet2.x) ** 2 + (droplet1.y - droplet2.y) ** 2);
             if (distance < droplet1.size + droplet2.size) {
                 newDroplet.counter += secondDroplet.counter;
-                if(newDroplet.counter > maxCounter) {
+                if (newDroplet.counter > maxCounter) {
                     maxCounter = newDroplet.counter;
                 }
                 let newSize = Math.sqrt(droplet1.size * droplet1.size + droplet2.size * droplet2.size);
@@ -232,7 +252,7 @@ function update() {
 function removeDropletsOffScreen() {
     //when the droplet goes off the screen, remove it from the array
     droplets = droplets.filter(function (droplet) {
-        return !((droplet.x  < 0 || droplet.y < 0) || (Math.ceil(droplet.x) > CANVAS_WIDTH || Math.ceil(droplet.y) > CANVAS_HEIGHT))
+        return !((droplet.x < 0 || droplet.y < 0) || (Math.ceil(droplet.x) > CANVAS_WIDTH || Math.ceil(droplet.y) > CANVAS_HEIGHT))
     });
 }
 
@@ -305,7 +325,7 @@ window.addEventListener('keydown', function (event) {
     }
 });
 
-document.getElementById('restartButton').addEventListener('click', function() {
+document.getElementById('restartButton').addEventListener('click', function () {
     // Reset game state
     droplets = [];
     tiltX = 0;
@@ -313,7 +333,7 @@ document.getElementById('restartButton').addEventListener('click', function() {
     maxCounter = 0;
 });
 
-document.getElementById('submitParams').addEventListener('click', function() {
+document.getElementById('submitParams').addEventListener('click', function () {
     // Get game parameters from input fields
     let inputMaxDroplets = document.getElementById('maxDroplets');
     let inputMaxDropletSize = document.getElementById('maxDropletSize');
@@ -333,8 +353,8 @@ document.getElementById('submitParams').addEventListener('click', function() {
     if (inputDropletsMaxSpeed.value) DROPLETS_MAX_SPEED = parseInt(inputDropletsMaxSpeed.value);
 });
 
-document.querySelectorAll('[data-slider-target]').forEach(function(slider) {
-    slider.addEventListener('input', function() {
+document.querySelectorAll('[data-slider-target]').forEach(function (slider) {
+    slider.addEventListener('input', function () {
         let targetId = this.getAttribute('data-slider-target');
         let targetElement = document.getElementById(targetId);
         if (targetElement) {
@@ -354,7 +374,7 @@ window.addEventListener('load', function (event) {
     document.getElementById('dropletsMaxSpeed').value = DROPLETS_MAX_SPEED;
 
     // Set initial slider values
-    document.querySelectorAll('[data-slider-target]').forEach(function(slider) {
+    document.querySelectorAll('[data-slider-target]').forEach(function (slider) {
         let targetId = slider.getAttribute('data-slider-target');
         let targetElement = document.getElementById(targetId);
         if (targetElement) {
