@@ -4,12 +4,12 @@ let tiltY = 0;
 let maxCounter = 0;
 const CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 600;
-let BOUNCE_OFF_EDGES = true;
-let MAX_DROPLETS = 5;
-let MAX_DROPLET_SIZE = 5;
-let MIN_DROPLET_SIZE = 15;
+let BOUNCE_OFF_EDGES = false;
+let MAX_DROPLETS = 1;
+let MIN_DROPLET_SIZE = 5;
+let MAX_DROPLET_SIZE = 15;
 let DROPLET_CREATION_INTERVAL = 100000;
-let USE_GRAVITY = false;
+let USE_GRAVITY = true;
 let DROPLETS_MAX_SPEED = 10;
 
 class Droplet {
@@ -75,10 +75,6 @@ class Droplet {
         this.updateVel('vy', tiltY);
         this.updateVel('vx', tiltX);
 
-        if (USE_GRAVITY) {
-            this.vy += this.speed; // Y velocity
-        }
-
         // Update position based on velocity
         this.x += this.vx;
         this.y += this.vy;
@@ -97,17 +93,20 @@ class Droplet {
     }
     updateVel(prop, tilt) {
         if(tilt != 0) {
-            this[prop] += tilt * (this.speed) + (Math.random() * (this.speed / 10) - 0.1);
+            let r = Math.random() * 1.9 - 0.1;
+            this[prop] += tilt * (this.speed + r);
+        } else if (USE_GRAVITY && prop === 'vy' ) {
+            this.vy += Math.abs(this.vy) + this.speed + (Math.random() * 0.9 - 0.2); // Y velocity
         } else {
             this[prop] = 0;
         }
+        
         if (this[prop] > this.maxSpeed) {
             this[prop] = this.maxSpeed;
         }
         if (this[prop] < -this.maxSpeed) {
             this[prop] = -this.maxSpeed;
         }
-        
         if (BOUNCE_OFF_EDGES) {
             const pos = prop === 'vx' ? 'x' : 'y';
             const canvas = prop === 'vx' ? CANVAS_WIDTH : CANVAS_HEIGHT;
@@ -116,7 +115,6 @@ class Droplet {
                 this[prop] = -this[prop];
             }
         }
-        
     }
     draw(ctx) {
         this.drawSplatters(ctx)
@@ -275,6 +273,7 @@ function drawCounter() {
     ctx.fillStyle = "black";
     ctx.fillText(`TOP SCORE: ${maxCounter} droplets joined`, 10, 30);
     ctx.fillText(`Droplets: ${droplets.length}`, 10, 50);
+    ctx.fillText(`Tilt: : ${tiltX}x - ${tiltY}y`, 10, 70);
 }
 
 function draw() {
@@ -364,12 +363,12 @@ window.addEventListener('load', function (event) {
     });
 });
 window.addEventListener('keyup', function (event) {
-    // if (['ArrowLeft', 'ArrowRight'].includes(event.key)) {
-    //     tiltX = 0;
-    // }
-    // if (['ArrowUp', 'ArrowDown'].includes(event.key)) {
-    //     tiltY = 0;
-    // }
+    if (['ArrowLeft', 'ArrowRight'].includes(event.key)) {
+        tiltX = 0;
+    }
+    if (['ArrowUp', 'ArrowDown'].includes(event.key)) {
+        tiltY = 0;
+    }
 });
 
 function gameLoop() {
