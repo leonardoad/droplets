@@ -1,5 +1,6 @@
 
-![image](https://github.com/leonardoad/droplets/assets/2466150/1db1b979-336c-4316-a03e-753a6476ca30)
+![image](https://github.com/leonardoad/droplets/assets/2466150/815eae8a-6152-4ef7-be38-92f09b083076)
+
 
 
 ## TODO
