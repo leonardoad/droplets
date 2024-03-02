@@ -520,12 +520,31 @@ window.addEventListener('load', function (event) {
 
     let canvas = document.getElementById('gameCanvas');
 
-    canvas.addEventListener('click', function () {
-        setLevel(levels[currentLevel]);
-    }, false);
-
     canvas.addEventListener('click', function (event) {
-        nextLevel();
+        let rect = canvas.getBoundingClientRect();
+        let x = event.clientX - rect.left;
+        let y = event.clientY - rect.top;
+
+        // Check if the click is within the bounds of the element
+        // Replace these with the actual bounds of your element
+        let elementX = CANVAS_WIDTH / 2 - 50;
+        let elementY = CANVAS_HEIGHT / 2 + 80;
+        let elementWidth = 100;
+        let elementHeight = 50;
+
+        if (x >= elementX && x <= elementX + elementWidth && y >= elementY && y <= elementY + elementHeight) {
+            // The click was inside the element, perform the action
+            setLevel(levels[currentLevel]);
+        }
+        // Check if the click is within the bounds of the element
+        // Replace these with the actual bounds of your element
+        let elementX2 = CANVAS_WIDTH / 2 + 150;
+        let elementY2 = CANVAS_HEIGHT / 2 + 80;
+
+        if (x >= elementX2 && x <= elementX2 + elementWidth && y >= elementY2 && y <= elementY2 + elementHeight) {
+            // The click was inside the element, perform the action
+            nextLevel();
+        }
     }, false);
 });
 
