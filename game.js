@@ -13,6 +13,42 @@ let USE_GRAVITY = false;
 let BOUNCE_OFF_EDGES = false;
 let TIME = 30;
 let GOAL = 10;
+let currentLevel = 1;
+const levels = {
+    1: {
+        maxDroplets: 22,
+        minDropletSize: 20,
+        maxDropletSize: 46,
+        dropletCreationInterval: 1000,
+        useGravity: false,
+        bounceOffEdges: false,
+        dropletsMaxSpeed: 12,
+        time: 30,
+        goal: 10,
+    },
+    2: {
+        maxDroplets: 20,
+        minDropletSize: 10,
+        maxDropletSize: 35,
+        dropletCreationInterval: 500,
+        useGravity: false,
+        bounceOffEdges: false,
+        dropletsMaxSpeed: 15,
+        time: 20,
+        goal: 20,
+    },
+    3: {
+        maxDroplets: 30,
+        maxDropletSize: 20,
+        minDropletSize: 5,
+        dropletCreationInterval: 250,
+        useGravity: true,
+        bounceOffEdges: false,
+        dropletsMaxSpeed: 20,
+        time: 10,
+        goal: 30,
+    }
+};
 
 class Droplet {
     constructor(x, y, size, counter = 1, splatted = false, shouldGrow = true) {
@@ -308,6 +344,7 @@ function drawCounter() {
     ctx.fillText(`Max Speed: ${DROPLETS_MAX_SPEED}`, 10, 130);
     ctx.fillText(`Time: ${TIME}`, 10, 150);
     ctx.fillText(`Goal: ${GOAL}`, 10, 170);
+    ctx.fillText(`Level: ${currentLevel}`, 10, 190);
 
     if (gameOver()) {
         ctx.font = "30px Arial";
@@ -325,7 +362,34 @@ function drawCounter() {
             ctx.fillStyle = "black";
             ctx.fillText(`You joined ${maxCounter} droplets`, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 60);
         }
+
+        addRestartButton(ctx);
+        addNextButton(ctx);
     }
+}
+
+function addRestartButton(ctx) {
+    ctx.beginPath();
+    ctx.rect(CANVAS_WIDTH / 2 - 50, CANVAS_HEIGHT / 2 + 80, 100, 50);
+    ctx.fillStyle = "blue";
+    ctx.fill();
+    ctx.font = "14px Arial";
+    ctx.fillStyle = "white";
+    ctx.fillText("RESTART", CANVAS_WIDTH / 2 - 30, CANVAS_HEIGHT / 2 + 110);
+    ctx.closePath();
+
+
+}
+function addNextButton(ctx) {
+    ctx.beginPath();
+    ctx.rect(CANVAS_WIDTH / 2 + 150, CANVAS_HEIGHT / 2 + 80, 100, 50);
+    ctx.fillStyle = "blue";
+    ctx.fill();
+    ctx.font = "14px Arial";
+    ctx.fillStyle = "white";
+    ctx.fillText("NEXT LEVEL", CANVAS_WIDTH / 2 + 160, CANVAS_HEIGHT / 2 + 110);
+    ctx.closePath();
+
 }
 
 function draw() {
@@ -448,57 +512,43 @@ window.addEventListener('load', function (event) {
     document.querySelectorAll('[data-level]').forEach(function (element) {
         element.addEventListener('click', function () {
             let targetLevel = this.getAttribute('data-level');
-            let level = levels[targetLevel];
-            MAX_DROPLETS = level.maxDroplets;
-            MAX_DROPLET_SIZE = level.maxDropletSize;
-            MIN_DROPLET_SIZE = level.minDropletSize;
-            DROPLET_CREATION_INTERVAL = level.dropletCreationInterval;
-            USE_GRAVITY = level.useGravity;
-            BOUNCE_OFF_EDGES = level.bounceOffEdges;
-            DROPLETS_MAX_SPEED = level.dropletsMaxSpeed;
-            TIME = level.time;
-            GOAL = level.goal;
-
+            currentLevel = targetLevel;
+            setLevel(levels[targetLevel]);
             resetGame();
         });
     });
+
+    let canvas = document.getElementById('gameCanvas');
+
+    canvas.addEventListener('click', function () {
+        setLevel(levels[currentLevel]);
+    }, false);
+
+    canvas.addEventListener('click', function (event) {
+        nextLevel();
+    }, false);
 });
 
-const levels = {
-    easy: {
-        maxDroplets: 22,
-        minDropletSize: 20,
-        maxDropletSize: 46,
-        dropletCreationInterval: 1000,
-        useGravity: false,
-        bounceOffEdges: false,
-        dropletsMaxSpeed: 12,
-        time: 30,
-        goal: 10,
-    },
-    medium: {
-        maxDroplets: 20,
-        minDropletSize: 10,
-        maxDropletSize: 35,
-        dropletCreationInterval: 500,
-        useGravity: false,
-        bounceOffEdges: false,
-        dropletsMaxSpeed: 15,
-        time: 20,
-        goal: 20,
-    },
-    hard: {
-        maxDroplets: 30,
-        maxDropletSize: 20,
-        minDropletSize: 5,
-        dropletCreationInterval: 250,
-        useGravity: true,
-        bounceOffEdges: false,
-        dropletsMaxSpeed: 20,
-        time: 10,
-        goal: 30,
+function nextLevel() {
+    currentLevel++;
+    if (currentLevel > Object.keys(levels).length) {
+        currentLevel = 1;
     }
-};
+    setLevel(levels[currentLevel]);
+    resetGame();
+}
+
+function setLevel(level) {
+    MAX_DROPLETS = level.maxDroplets;
+    MAX_DROPLET_SIZE = level.maxDropletSize;
+    MIN_DROPLET_SIZE = level.minDropletSize;
+    DROPLET_CREATION_INTERVAL = level.dropletCreationInterval;
+    USE_GRAVITY = level.useGravity;
+    BOUNCE_OFF_EDGES = level.bounceOffEdges;
+    DROPLETS_MAX_SPEED = level.dropletsMaxSpeed;
+    TIME = level.time;
+    GOAL = level.goal;
+}
 
 
 
@@ -506,7 +556,9 @@ function resetGame() {
     droplets = [];
     tiltX = 0;
     tiltY = 0;
-    maxCounter = 0; 
+    maxCounter = 0;
+    TIME = levels[currentLevel].time;
+    GOAL = levels[currentLevel].goal;
 }
 
 function gameLoop() {
