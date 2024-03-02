@@ -4,10 +4,10 @@ let tiltY = 0;
 let maxCounter = 0;
 const CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 600;
-let BOUNCE_OFF_EDGES = false;
+let BOUNCE_OFF_EDGES = true;
 let MAX_DROPLETS = 1;
-let MAX_DROPLET_SIZE = 15;
-let MIN_DROPLET_SIZE = 1;
+let MAX_DROPLET_SIZE = 20;
+let MIN_DROPLET_SIZE = 20;
 let DROPLET_CREATION_INTERVAL = 100000;
 let USE_GRAVITY = false;
 let DROPLETS_MAX_SPEED = 10;
@@ -96,10 +96,10 @@ class Droplet {
         }
     }
     updateVel(prop, tilt) {
-
-        this[prop] += tilt * (this.speed) + (Math.random() * 0.3 - 0.1);
-        if (tilt === 0) {
-            this[prop] = tilt * this.speed;
+        if(tilt != 0) {
+            this[prop] += tilt * (this.speed) + (Math.random() * (this.speed / 10) - 0.1);
+        } else {
+            this[prop] = 0;
         }
         if (this[prop] > this.maxSpeed) {
             this[prop] = this.maxSpeed;
@@ -116,6 +116,7 @@ class Droplet {
                 this[prop] = -this[prop];
             }
         }
+        
     }
     draw(ctx) {
         this.drawSplatters(ctx)
@@ -228,22 +229,10 @@ function update() {
 }
 
 function removeDropletsOffScreen() {
-    if (!BOUNCE_OFF_EDGES) {
-        droplets.filter(function (droplet) {
-            return droplet.y + droplet.size >= CANVAS_HEIGHT
-                || droplet.x + droplet.size >= CANVAS_WIDTH
-                || droplet.y - droplet.size <= 0 || droplet.x - droplet.size <= 0;
-        }).forEach(element => {
-            if (element && element.counter > maxCounter) {
-                maxCounter = element.counter;
-            }
-        });
-
-        //when the droplet goes off the screen, remove it from the array
-        droplets = droplets.filter(function (droplet) {
-            return droplet.y + droplet.size < CANVAS_HEIGHT && droplet.x + droplet.size < CANVAS_WIDTH && droplet.y - droplet.size > 0 && droplet.x - droplet.size > 0;
-        });
-    }
+    //when the droplet goes off the screen, remove it from the array
+    droplets = droplets.filter(function (droplet) {
+        return !((droplet.x  < 0 || droplet.y < 0) || (Math.ceil(droplet.x) > CANVAS_WIDTH || Math.ceil(droplet.y) > CANVAS_HEIGHT))
+    });
 }
 
 function createDroplet() {
@@ -268,7 +257,7 @@ function rPosY() {
 }
 
 function rSize() {
-    return r(1, MAX_DROPLET_SIZE);
+    return r(MIN_DROPLET_SIZE, MAX_DROPLET_SIZE);
 }
 
 function speed(size) {
@@ -347,6 +336,26 @@ document.querySelectorAll('[data-slider-target]').forEach(function(slider) {
         let targetElement = document.getElementById(targetId);
         if (targetElement) {
             targetElement.textContent = this.value;
+        }
+    });
+});
+
+window.addEventListener('load', function (event) {
+    // Set initial input values
+    document.getElementById('maxDroplets').value = MAX_DROPLETS;
+    document.getElementById('maxDropletSize').value = MAX_DROPLET_SIZE;
+    document.getElementById('minDropletSize').value = MIN_DROPLET_SIZE;
+    document.getElementById('dropletCreationInterval').value = DROPLET_CREATION_INTERVAL;
+    document.getElementById('useGravity').checked = USE_GRAVITY;
+    document.getElementById('bounceOffEdges').checked = BOUNCE_OFF_EDGES;
+    document.getElementById('dropletsMaxSpeed').value = DROPLETS_MAX_SPEED;
+
+    // Set initial slider values
+    document.querySelectorAll('[data-slider-target]').forEach(function(slider) {
+        let targetId = slider.getAttribute('data-slider-target');
+        let targetElement = document.getElementById(targetId);
+        if (targetElement) {
+            targetElement.textContent = slider.value;
         }
     });
 });
