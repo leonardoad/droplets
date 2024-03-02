@@ -325,6 +325,28 @@ window.addEventListener('keydown', function (event) {
     }
 });
 
+window.addEventListener('keyup', function (event) {
+    if (['ArrowLeft', 'ArrowRight'].includes(event.key)) {
+        tiltX = 0;
+    }
+    if (['ArrowUp', 'ArrowDown'].includes(event.key)) {
+        tiltY = 0;
+    }
+});
+
+document.getElementById('leftButton').addEventListener('click', function () {
+    tiltX += -1;
+});
+document.getElementById('rightButton').addEventListener('click', function () {
+    tiltX += 1;
+});
+document.getElementById('upButton').addEventListener('click', function () {
+    tiltY += -1;
+});
+document.getElementById('downButton').addEventListener('click', function () {
+    tiltY += 1;
+});
+
 document.getElementById('restartButton').addEventListener('click', function () {
     // Reset game state
     droplets = [];
@@ -384,43 +406,7 @@ window.addEventListener('load', function (event) {
         }
     });
 });
-window.addEventListener('keyup', function (event) {
-    if (['ArrowLeft', 'ArrowRight'].includes(event.key)) {
-        tiltX = 0;
-    }
-    if (['ArrowUp', 'ArrowDown'].includes(event.key)) {
-        tiltY = 0;
-    }
-});
 
-if (window.DeviceOrientationEvent) {
-    window.addEventListener("deviceorientation", function (event) {
-        console.log(`event.beta, event.gamma`, event.beta, event.gamma);
-        if (event.gamma) tiltX = event.gamma; // range [-90,90], left-right tilt
-        if (event.beta) tiltY = event.beta;  // range [-180,180], front-back tilt
-    }, true);
-} else if (window.DeviceMotionEvent) {
-    window.addEventListener('devicemotion', function (event) {
-        console.log(`event`, event);
-        if (event.acceleration.x) tiltX = event.acceleration.x;
-        if (event.acceleration.y) tiltY = event.acceleration.y;
-
-    }, true);
-} else {
-    window.addEventListener("MozOrientation", function (orientation) {
-        console.log(`orientation`, orientation);
-        if (orientation.x) tiltX = orientation.x;
-        if (orientation.y) tiltY = orientation.y;
-    }, true);
-}
-
-let gyroscope = new Gyroscope({ frequency: 60 });
-
-gyroscope.addEventListener("reading", (e) => {
-    if (gyroscope.x) tiltX = gyroscope.x;
-    if (gyroscope.y) tiltY = gyroscope.y;
-});
-gyroscope.start();
 
 function gameLoop() {
     update();
