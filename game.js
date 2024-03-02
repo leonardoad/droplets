@@ -5,9 +5,9 @@ let maxCounter = 0;
 const CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 600;
 let BOUNCE_OFF_EDGES = true;
-let MAX_DROPLETS = 1;
-let MAX_DROPLET_SIZE = 20;
-let MIN_DROPLET_SIZE = 20;
+let MAX_DROPLETS = 5;
+let MAX_DROPLET_SIZE = 5;
+let MIN_DROPLET_SIZE = 15;
 let DROPLET_CREATION_INTERVAL = 100000;
 let USE_GRAVITY = false;
 let DROPLETS_MAX_SPEED = 10;
@@ -206,6 +206,9 @@ function joinDroplets() {
             let distance = Math.sqrt((droplet1.x - droplet2.x) ** 2 + (droplet1.y - droplet2.y) ** 2);
             if (distance < droplet1.size + droplet2.size) {
                 newDroplet.counter += secondDroplet.counter;
+                if(newDroplet.counter > maxCounter) {
+                    maxCounter = newDroplet.counter;
+                }
                 let newSize = Math.sqrt(droplet1.size * droplet1.size + droplet2.size * droplet2.size);
                 droplets.splice(i, 1);
                 droplets.splice(j - 1, 1); // j - 1 because we just removed an element at position i
@@ -271,6 +274,7 @@ function drawCounter() {
     ctx.font = "14px Arial";
     ctx.fillStyle = "black";
     ctx.fillText(`TOP SCORE: ${maxCounter} droplets joined`, 10, 30);
+    ctx.fillText(`Droplets: ${droplets.length}`, 10, 50);
 }
 
 function draw() {
