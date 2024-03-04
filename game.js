@@ -16,6 +16,7 @@ let GOAL = 10;
 let CURRENT_LEVEL = 1;
 let MIN_SIZE_TO_JOIN = 5;
 let MIN_SIZE_TO_MOVE = 15;
+let LIMIT_TILT = 5;
 
 
 const levels = {
@@ -174,7 +175,7 @@ class Droplet {
         }
     }
     updateVel(prop, tilt) {
-        if ((tilt != 0)  && this.speed != 0) {
+        if ((tilt != 0) && this.speed != 0) {
             let r = Math.random() * 1.9 - 0.1;
             this[prop] += tilt * (this.speed + r);
         } else if (USE_GRAVITY && prop === 'vy') {
@@ -450,13 +451,17 @@ window.addEventListener('keydown', function (event) {
         return;
     }
     if (['ArrowLeft', 'a'].includes(event.key)) {
-        TILT_X += -1;
+        if (TILT_X > -LIMIT_TILT)
+            TILT_X += -1;
     } else if (['d', 'ArrowRight'].includes(event.key)) {
-        TILT_X += 1;
+        if (TILT_X < LIMIT_TILT)
+            TILT_X += 1;
     } else if (['ArrowUp', 'w'].includes(event.key)) {
-        TILT_Y += -1;
+        if (TILT_Y > -LIMIT_TILT)
+            TILT_Y += -1;
     } else if (['s', 'ArrowDown'].includes(event.key)) {
-        TILT_Y += 1;
+        if (TILT_Y < LIMIT_TILT)
+            TILT_Y += 1;
     }
     if (event.key === ' ') {
         DROPLETS.push(new Droplet(rPosX(), rPosY(), rSize()));
@@ -465,10 +470,28 @@ window.addEventListener('keydown', function (event) {
 
 window.addEventListener('keyup', function (event) {
     if (['ArrowLeft', 'ArrowRight', 'a', 'd'].includes(event.key)) {
-        TILT_X = 0;
+        // Decrease TILT_X gradually
+        let decreaseInterval = setInterval(function () {
+            if (TILT_X > 0) {
+                TILT_X -= 1;
+            } else if (TILT_X < 0) {
+                TILT_X += 1;
+            } else {
+                clearInterval(decreaseInterval);
+            }
+        }, 100); // Decrease every 100ms
     }
     if (['ArrowUp', 'ArrowDown', 'w', 's'].includes(event.key)) {
-        TILT_Y = 0;
+        // Decrease TILT_Y gradually
+        let decreaseInterval = setInterval(function () {
+            if (TILT_Y > 0) {
+                TILT_Y -= 1;
+            } else if (TILT_Y < 0) {
+                TILT_Y += 1;
+            } else {
+                clearInterval(decreaseInterval);
+            }
+        }, 100); // Decrease every 100ms
     }
 });
 
