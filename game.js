@@ -26,7 +26,7 @@ const levels = {
         maxDropletSize: 16,
         dropletCreationInterval: 100000,
         useGravity: false,
-        bounceOffEdges: true,
+        bounceOffEdges: false,
         dropletsMaxSpeed: 12,
         time: 30,
         goal: 10,
@@ -56,7 +56,7 @@ const levels = {
 };
 
 class Droplet {
-    constructor(x, y, size, counter = 1, splatted = false, shouldGrow = true) {
+    constructor(x, y, size, counter = 1, splatted = false, shouldGrow = true, movable = false) {
         this.x = x;
         this.y = y;
         this.size = shouldGrow ? 2 : size;
@@ -70,6 +70,7 @@ class Droplet {
         this.timeMoving = 0;
         this.splatters = [];
         this.splatted = splatted;
+        this.movable = movable;
     }
     createSplatter() {
         // Create 10 smaller droplets in random directions
@@ -127,6 +128,32 @@ class Droplet {
         this.createTrail();
 
     }
+    updateVel(prop, tilt) {
+        if ((tilt != 0) && this.speed != 0) {
+            let r = Math.random() * 1.9 - 0.1;
+            this[prop] += tilt * (this.speed + r);
+        } else if (USE_GRAVITY && prop === 'vy' && !this.movable) {
+            this.vy += Math.abs(this.vy) + this.speed + (Math.random() * 0.9 - 0.2); // Y velocity
+        } else {
+            this[prop] = 0;
+        }
+
+        if (this[prop] > this.maxSpeed) {
+            this[prop] = this.maxSpeed;
+        }
+        if (this[prop] < -this.maxSpeed) {
+            this[prop] = -this.maxSpeed;
+        }
+        if (BOUNCE_OFF_EDGES) {
+            const pos = prop === 'vx' ? 'x' : 'y';
+            const canvas = prop === 'vx' ? CANVAS_WIDTH : CANVAS_HEIGHT;
+            // Bounce off the edges of the screen
+            if (this[pos] - this.size < 0 || this[pos] + this.size > canvas) {
+                this[prop] = -this[prop];
+            }
+        }
+    }
+    
     createTrail() {
         if (this.finalSize * 0.85 < MIN_SIZE_TO_MOVE) {
             return;
@@ -178,31 +205,6 @@ class Droplet {
             this.shouldGrow = false;
         }
     }
-    updateVel(prop, tilt) {
-        if ((tilt != 0) && this.speed != 0) {
-            let r = Math.random() * 1.9 - 0.1;
-            this[prop] += tilt * (this.speed + r);
-        } else if (USE_GRAVITY && prop === 'vy') {
-            this.vy += Math.abs(this.vy) + this.speed + (Math.random() * 0.9 - 0.2); // Y velocity
-        } else {
-            this[prop] = 0;
-        }
-
-        if (this[prop] > this.maxSpeed) {
-            this[prop] = this.maxSpeed;
-        }
-        if (this[prop] < -this.maxSpeed) {
-            this[prop] = -this.maxSpeed;
-        }
-        if (BOUNCE_OFF_EDGES) {
-            const pos = prop === 'vx' ? 'x' : 'y';
-            const canvas = prop === 'vx' ? CANVAS_WIDTH : CANVAS_HEIGHT;
-            // Bounce off the edges of the screen
-            if (this[pos] - this.size < 0 || this[pos] + this.size > canvas) {
-                this[prop] = -this[prop];
-            }
-        }
-    }
     draw(ctx) {
         this.drawSplatters(ctx)
         this.drawShadow(ctx);
@@ -213,7 +215,7 @@ class Droplet {
 
     drawDroplet(ctx) {
         let gradient = ctx.createRadialGradient(this.x + this.size * 0.5, this.y + this.size * 0.5, this.size * 0.3, this.x - this.size * 0.4, this.y + this.size * 0.9, this.size * 6.6);
-        gradient.addColorStop(0.1, '#87ceeb');
+        gradient.addColorStop(0.1, this.movable ? '#f4f1f4' : '#87ceeb');
         gradient.addColorStop(0.2, '#69b0cd');
         gradient.addColorStop(0.4, '#87ceeb');
 
@@ -324,7 +326,7 @@ function joinDroplets() {
                 // limit the size to the maximum size of a circle using the canvas width and height
                 const maxSize = Math.min(CANVAS_WIDTH, CANVAS_HEIGHT) / 2;
                 if (newSize <= maxSize) {
-                    DROPLETS.push(new Droplet(newDroplet.x, newDroplet.y, newSize, newDroplet.counter, true, false));
+                    DROPLETS.push(new Droplet(newDroplet.x, newDroplet.y, newSize, newDroplet.counter, true, false, newDroplet.movable));
                 }
             }
         }
@@ -367,9 +369,6 @@ function rSize() {
 }
 
 function speed(size) {
-    if (size < MIN_SIZE_TO_MOVE) {
-        return 0;
-    }
     return size / 100;
 }
 
@@ -656,6 +655,19 @@ function draw() {
     drawCounter();
 }
 
+function setMainDroplet() {
+    // Remove movable from all droplets
+    DROPLETS.forEach(droplet => droplet.movable = false);
+
+    // Set the main droplet to the largest droplet
+    let largestDroplet = DROPLETS.reduce(function (prev, current) {
+        return (prev.counter > current.counter) ? prev : current
+    });
+    if (largestDroplet) {
+        largestDroplet.movable = true;
+    }
+}
+
 function update() {
     for (let droplet of DROPLETS) {
         droplet.update();
@@ -663,6 +675,7 @@ function update() {
     removeDropletsOffScreen();
     createDroplet();
     joinDroplets();
+    setMainDroplet();
 }
 
 function gameLoop() {
