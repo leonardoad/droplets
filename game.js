@@ -4,7 +4,7 @@ let TILT_Y = 0;
 let MAX_COUNTER = 0;
 let CANVAS_WIDTH = 800;
 let CANVAS_HEIGHT = 600;
-let MAX_DROPLETS = 22;
+let MAX_DROPLETS = 20;
 let MIN_DROPLET_SIZE = 5;
 let MAX_DROPLET_SIZE = 16;
 let DROPLET_CREATION_INTERVAL = 100000;
@@ -14,16 +14,16 @@ let BOUNCE_OFF_EDGES = false;
 let TIME = 30;
 let GOAL = 10;
 let CURRENT_LEVEL = 1;
-let MIN_SIZE_TO_JOIN = 7;
+let MIN_SIZE_TO_JOIN = 5;
 let MIN_SIZE_TO_MOVE = 15;
 
 
 const levels = {
     1: {
-        maxDroplets: 40,
-        minDropletSize: 1,
-        maxDropletSize: 20,
-        dropletCreationInterval: 1000,
+        maxDroplets: 20,
+        minDropletSize: 5,
+        maxDropletSize: 16,
+        dropletCreationInterval: 100000,
         useGravity: false,
         bounceOffEdges: true,
         dropletsMaxSpeed: 12,
@@ -66,6 +66,7 @@ class Droplet {
         this.vy = TILT_Y * this.speed; // y velocity
         this.maxSpeed = size / 50 * DROPLETS_MAX_SPEED;
         this.counter = counter;
+        this.timeMoving = 0;
         this.splatters = [];
         this.splatted = splatted;
     }
@@ -113,6 +114,7 @@ class Droplet {
         return `${this.counter}`;
     }
     moveDroplet() {
+
         // Update velocity based on tilt
         this.updateVel('vy', TILT_Y);
         this.updateVel('vx', TILT_X);
@@ -121,6 +123,44 @@ class Droplet {
         this.x += this.vx;
         this.y += this.vy;
 
+        this.createTrail();
+
+    }
+    createTrail() {
+        if (this.vx != 0 || this.vy != 0) {
+            const timeDiff = this.vx != 0 ? Math.abs(this.vx) : this.vy != 0 ? Math.abs(this.vy) : 0;
+            this.timeMoving += timeDiff / 200;
+        } else {
+            this.timeMoving = 0;
+        }
+
+        // moving the droplet should leave a trail of new smaller droplets behind
+        if (this.timeMoving >= 1) {
+            const sizeDiff = this.finalSize * 0.15;
+            this.timeMoving = 0;
+            this.finalSize *= 0.85;
+            this.speed = speed(this.finalSize);
+
+            let newX = this.x;
+            let newY = this.y;
+            if (this.vx > 0) {
+                newX = this.x - sizeDiff;
+                newY = this.y - sizeDiff / 4;
+            } else if (this.vx < 0) {
+                newX = this.x + sizeDiff;
+                newY = this.y + sizeDiff / 4;
+            } else if (this.vy > 0) {
+                newX = this.x - sizeDiff / 4;
+                newY = this.y - sizeDiff;
+            } else if (this.vy < 0) {
+                newX = this.x + sizeDiff / 4;
+                newY = this.y + sizeDiff;
+            }
+
+
+            let newDroplet = new Droplet(newX, newY, sizeDiff, 1, false, true);
+            DROPLETS.push(newDroplet);
+        }
     }
     growDroplet() {
         // If the droplet is still growing and hasn't reached its final size
@@ -285,14 +325,6 @@ function joinDroplets() {
         }
     }
 }
-function update() {
-    for (let droplet of DROPLETS) {
-        droplet.update();
-    }
-    removeDropletsOffScreen();
-    createDroplet();
-    joinDroplets();
-}
 
 function removeDropletsOffScreen() {
     //when the droplet goes off the screen, remove it from the array
@@ -302,9 +334,10 @@ function removeDropletsOffScreen() {
 }
 
 function createDroplet() {
-    if(DROPLETS.length === 0) {
-        DROPLETS.push(new Droplet(rPosX(), rPosY(), MIN_SIZE_TO_MOVE, 1, false, true));
-    }else if (DROPLETS.length < MAX_DROPLETS) {
+    if (DROPLETS.length === 0) {
+        const size = levels[CURRENT_LEVEL].minDropletSize > MIN_SIZE_TO_MOVE ? levels[CURRENT_LEVEL].minDropletSize : MIN_SIZE_TO_MOVE;
+        DROPLETS.push(new Droplet(rPosX(), rPosY(), size, 1, false, true));
+    } else if (DROPLETS.length < MAX_DROPLETS) {
         DROPLETS.push(new Droplet(rPosX(), rPosY(), rSize(), 1, false, true));
     }
 
@@ -329,7 +362,7 @@ function rSize() {
 }
 
 function speed(size) {
-    if(size < MIN_SIZE_TO_MOVE) {
+    if (size < MIN_SIZE_TO_MOVE) {
         return 0;
     }
     return size / 100;
@@ -340,7 +373,8 @@ function win() {
 }
 
 function gameOver() {
-    return TIME <= 0 || win();
+    const movables = DROPLETS.filter(d => d.size >= MIN_SIZE_TO_MOVE);
+    return TIME <= 0 || win() || movables.length === 0;
 }
 
 function drawCounter() {
@@ -404,20 +438,6 @@ function addNextButton(ctx) {
 
 }
 
-function draw() {
-    let canvas = document.getElementById('gameCanvas');
-    canvas.width = CANVAS_WIDTH;
-    canvas.height = CANVAS_HEIGHT;
-    let ctx = canvas.getContext('2d');
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    for (let droplet of DROPLETS) {
-        droplet.draw(ctx);
-    }
-
-    drawCounter();
-}
 
 setInterval(function () {
     if (TIME > 0) {
@@ -591,6 +611,31 @@ function resetGame() {
     MAX_COUNTER = 0;
     TIME = levels[CURRENT_LEVEL].time;
     GOAL = levels[CURRENT_LEVEL].goal;
+}
+
+
+function draw() {
+    let canvas = document.getElementById('gameCanvas');
+    canvas.width = CANVAS_WIDTH;
+    canvas.height = CANVAS_HEIGHT;
+    let ctx = canvas.getContext('2d');
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    for (let droplet of DROPLETS) {
+        droplet.draw(ctx);
+    }
+
+    drawCounter();
+}
+
+function update() {
+    for (let droplet of DROPLETS) {
+        droplet.update();
+    }
+    removeDropletsOffScreen();
+    createDroplet();
+    joinDroplets();
 }
 
 function gameLoop() {
