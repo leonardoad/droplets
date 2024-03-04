@@ -1,4 +1,5 @@
 let DROPLETS = [];
+let CRACKS = [];
 let TILT_X = 0;
 let TILT_Y = 0;
 let MAX_COUNTER = 0;
@@ -17,6 +18,8 @@ let CURRENT_LEVEL = 1;
 let MIN_SIZE_TO_JOIN = 5;
 let MIN_SIZE_TO_MOVE = 15;
 let LIMIT_TILT = 5;
+const MAX_CRACKS = 10;
+
 
 
 const levels = {
@@ -56,20 +59,20 @@ const levels = {
 };
 
 class Crack {
-    constructor(x,y) {
-        this.x = x;
-        this.y = y;
-        this.length = r(1, 10);
-        this.points = this.getPoints(x, y);
-        
+    constructor(x, y) {
+        this.direction = r(0, 1) > 0.5 ? 1 : -1;
+        this.x = this.direction === 1 ? 0 : CANVAS_WIDTH;
+        this.y = CANVAS_HEIGHT - 1;
+        this.length = r(1, 15);
+        this.points = this.getPoints(this.x, this.y);
     }
 
     getPoints(x, y) {
         let points = [];
         let x1 = x;
         for (let i = 0; i < Math.abs(this.length); i++) {
-            x1 += Math.abs(Math.random() * 55);
-            points.push({ x:x1, y: y + Math.abs(Math.random() * 20) });
+            x1 += Math.abs(Math.random() * 55) * this.direction;
+            points.push({ x: x1, y: y + Math.abs(Math.random() * 5) });
         }
         return points;
     }
@@ -80,16 +83,30 @@ class Crack {
         ctx.moveTo(this.x, this.y);
         this.points.forEach(point => {
             ctx.lineTo(point.x, point.y);
+            ctx.lineWidth = 1 + (point.x + point.y) % 3; // Random line width for more realistic cracks
         });
-        ctx.strokeStyle = "black";
+        ctx.strokeStyle = "#87ceeb";
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(this.x + 2, this.y);
+        this.points.forEach(point => {
+            ctx.lineTo(point.x + 2, point.y);
+        });
+        ctx.lineWidth = 0.2; // Random line width for more realistic cracks
+        ctx.strokeStyle = "#000000";
         ctx.stroke();
     }
 
     update() {
+        this.moveCrack();
+    }
 
-
-        // this.moveCrack();
-
+    moveCrack() {
+        this.y -= 1;
+        this.points.forEach(point => {
+            point.y -= 1;
+        });
     }
 }
 
@@ -155,6 +172,9 @@ class Droplet {
         return `${this.counter}`;
     }
     moveDroplet() {
+        if(this.size < MIN_SIZE_TO_MOVE){
+            return;
+        }
 
         // Update velocity based on tilt
         this.updateVel('vy', TILT_Y);
@@ -192,7 +212,7 @@ class Droplet {
             }
         }
     }
-    
+
     createTrail() {
         if (this.finalSize * 0.85 < MIN_SIZE_TO_MOVE) {
             return;
@@ -245,6 +265,10 @@ class Droplet {
         }
     }
     draw(ctx) {
+        if (this.finalSize <= 0) {
+            return;
+        }
+
         this.drawSplatters(ctx)
         this.drawShadow(ctx);
         this.drawDroplet(ctx);
@@ -281,9 +305,6 @@ class Droplet {
         ctx.ellipse(this.x + reposition, this.y + reposition, Math.abs(this.size + elongationX), Math.abs(this.size + elongationY), 0, 0, 2 * Math.PI);
     }
     drawShadow(ctx) {
-        if (this.size < 5) {
-            return;
-        }
         // Create radial gradient for shadow
         let shadow = ctx.createRadialGradient(this.x, this.y, this.size * 0.3, this.x + this.size * 0.1, this.y - this.size * 0.9, this.size * 6.6);
         shadow.addColorStop(0.1, '#69b0cd');
@@ -299,10 +320,6 @@ class Droplet {
 
     }
     drawReflection(ctx) {
-        if (this.size < 5) {
-            return;
-        }
-
         let repositionY = TILT_Y != 0 ? -this.size * 0.1 : TILT_X != 0 ? this.size * 0.1 : 0;
         // Draw the ::before pseudo-element
         ctx.beginPath();
@@ -402,6 +419,12 @@ function removeDropletsOffScreen() {
         return !((droplet.x < 0 || droplet.y < 0) || (Math.ceil(droplet.x) > CANVAS_WIDTH || Math.ceil(droplet.y) > CANVAS_HEIGHT))
     });
 }
+function removeCracksOffScreen() {
+    //when the crack goes off the screen, remove it from the array
+    CRACKS = CRACKS.filter(function (crack) {
+        return !(crack.y < 0);
+    });
+}
 
 function createDroplet() {
     if (DROPLETS.length === 0) {
@@ -415,16 +438,10 @@ function createDroplet() {
     let delay = Math.random() * 2000 + DROPLET_CREATION_INTERVAL; // Random delay between 1000 and 3000 milliseconds
     setTimeout(createDroplet, delay);
 }
-const CRACKS = [];
-const MAX_CRACKS = 10;
 function createCracks() {
     if (CRACKS.length < MAX_CRACKS) {
         CRACKS.push(new Crack(rPosX(), rPosY()));
     }
-
-    // Call this function again after a random delay between 1 and 3 seconds
-    let delay = Math.random() * 2000 + DROPLET_CREATION_INTERVAL; // Random delay between 1000 and 3000 milliseconds
-    setTimeout(createCracks, delay);
 }
 
 
@@ -706,6 +723,7 @@ function setLevel(level) {
 
 function resetGame() {
     DROPLETS = [];
+    CRACKS = [];
     TILT_X = 0;
     TILT_Y = 0;
     MAX_COUNTER = 0;
@@ -753,12 +771,15 @@ function update() {
         crack.update();
     }
     removeDropletsOffScreen();
+    removeCracksOffScreen();
     createDroplet();
-    createCracks();
     joinDroplets();
     drainDroplets();
     setMainDroplet();
 }
+setInterval(function () {
+    createCracks();
+}, Math.random() * 50 + 2000);
 
 function gameLoop() {
     update();
