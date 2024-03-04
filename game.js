@@ -38,7 +38,7 @@ const levels = {
         dropletCreationInterval: 500,
         useGravity: false,
         bounceOffEdges: false,
-        dropletsMaxSpeed: 15,
+        dropletsMaxSpeed: 12,
         time: 20,
         goal: 20,
     },
@@ -128,6 +128,10 @@ class Droplet {
 
     }
     createTrail() {
+        if (this.finalSize * 0.85 < MIN_SIZE_TO_MOVE) {
+            return;
+        }
+
         if (this.vx != 0 || this.vy != 0) {
             const timeDiff = this.vx != 0 ? Math.abs(this.vx) : this.vy != 0 ? Math.abs(this.vy) : 0;
             this.timeMoving += timeDiff / 200;
