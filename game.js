@@ -55,6 +55,45 @@ const levels = {
     }
 };
 
+class Crack {
+    constructor(x,y) {
+        this.x = x;
+        this.y = y;
+        this.length = r(1, 10);
+        this.points = this.getPoints(x, y);
+        
+    }
+
+    getPoints(x, y) {
+        let points = [];
+        let x1 = x;
+        for (let i = 0; i < Math.abs(this.length); i++) {
+            x1 += Math.abs(Math.random() * 55);
+            points.push({ x:x1, y: y + Math.abs(Math.random() * 20) });
+        }
+        return points;
+    }
+
+    draw(ctx) {
+        // Drawing a more complex representation of a crack
+        ctx.beginPath();
+        ctx.moveTo(this.x, this.y);
+        this.points.forEach(point => {
+            ctx.lineTo(point.x, point.y);
+        });
+        ctx.strokeStyle = "black";
+        ctx.stroke();
+    }
+
+    update() {
+
+
+        // this.moveCrack();
+
+    }
+}
+
+
 class Droplet {
     constructor(x, y, size, counter = 1, splatted = false, shouldGrow = true, movable = false) {
         this.x = x;
@@ -242,6 +281,9 @@ class Droplet {
         ctx.ellipse(this.x + reposition, this.y + reposition, Math.abs(this.size + elongationX), Math.abs(this.size + elongationY), 0, 0, 2 * Math.PI);
     }
     drawShadow(ctx) {
+        if (this.size < 5) {
+            return;
+        }
         // Create radial gradient for shadow
         let shadow = ctx.createRadialGradient(this.x, this.y, this.size * 0.3, this.x + this.size * 0.1, this.y - this.size * 0.9, this.size * 6.6);
         shadow.addColorStop(0.1, '#69b0cd');
@@ -257,6 +299,9 @@ class Droplet {
 
     }
     drawReflection(ctx) {
+        if (this.size < 5) {
+            return;
+        }
 
         let repositionY = TILT_Y != 0 ? -this.size * 0.1 : TILT_X != 0 ? this.size * 0.1 : 0;
         // Draw the ::before pseudo-element
@@ -333,6 +378,24 @@ function joinDroplets() {
     }
 }
 
+function drainDroplets() {
+    //when droplets touch a crack, drain them
+    for (let i = 0; i < DROPLETS.length; i++) {
+        for (let j = 0; j < CRACKS.length; j++) {
+            let droplet = DROPLETS[i];
+            let crack = CRACKS[j];
+
+            for (let point of crack.points) {
+                let distance = Math.sqrt((droplet.x - point.x) ** 2 + (droplet.y - point.y) ** 2);
+                if (distance < droplet.size + 5) {
+                    droplet.finalSize -= 0.1;
+                }
+            }
+
+        }
+    }
+}
+
 function removeDropletsOffScreen() {
     //when the droplet goes off the screen, remove it from the array
     DROPLETS = DROPLETS.filter(function (droplet) {
@@ -351,6 +414,17 @@ function createDroplet() {
     // Call this function again after a random delay between 1 and 3 seconds
     let delay = Math.random() * 2000 + DROPLET_CREATION_INTERVAL; // Random delay between 1000 and 3000 milliseconds
     setTimeout(createDroplet, delay);
+}
+const CRACKS = [];
+const MAX_CRACKS = 10;
+function createCracks() {
+    if (CRACKS.length < MAX_CRACKS) {
+        CRACKS.push(new Crack(rPosX(), rPosY()));
+    }
+
+    // Call this function again after a random delay between 1 and 3 seconds
+    let delay = Math.random() * 2000 + DROPLET_CREATION_INTERVAL; // Random delay between 1000 and 3000 milliseconds
+    setTimeout(createCracks, delay);
 }
 
 
@@ -651,6 +725,9 @@ function draw() {
     for (let droplet of DROPLETS) {
         droplet.draw(ctx);
     }
+    for (let crack of CRACKS) {
+        crack.draw(ctx);
+    }
 
     drawCounter();
 }
@@ -672,9 +749,14 @@ function update() {
     for (let droplet of DROPLETS) {
         droplet.update();
     }
+    for (let crack of CRACKS) {
+        crack.update();
+    }
     removeDropletsOffScreen();
     createDroplet();
+    createCracks();
     joinDroplets();
+    drainDroplets();
     setMainDroplet();
 }
 
