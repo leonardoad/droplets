@@ -1,7 +1,7 @@
-let droplets = [];
-let tiltX = 0;
-let tiltY = 0;
-let maxCounter = 0;
+let DROPLETS = [];
+let TILT_X = 0;
+let TILT_Y = 0;
+let MAX_COUNTER = 0;
 let CANVAS_WIDTH = 800;
 let CANVAS_HEIGHT = 600;
 let MAX_DROPLETS = 22;
@@ -13,15 +13,19 @@ let USE_GRAVITY = false;
 let BOUNCE_OFF_EDGES = false;
 let TIME = 30;
 let GOAL = 10;
-let currentLevel = 1;
+let CURRENT_LEVEL = 1;
+let MIN_SIZE_TO_JOIN = 7;
+let MIN_SIZE_TO_MOVE = 15;
+
+
 const levels = {
     1: {
-        maxDroplets: 22,
-        minDropletSize: 20,
-        maxDropletSize: 46,
+        maxDroplets: 40,
+        minDropletSize: 1,
+        maxDropletSize: 20,
         dropletCreationInterval: 1000,
         useGravity: false,
-        bounceOffEdges: false,
+        bounceOffEdges: true,
         dropletsMaxSpeed: 12,
         time: 30,
         goal: 10,
@@ -58,8 +62,8 @@ class Droplet {
         this.finalSize = size;
         this.shouldGrow = shouldGrow;
         this.speed = speed(size);
-        this.vx = tiltX * this.speed; // x velocity
-        this.vy = tiltY * this.speed; // y velocity
+        this.vx = TILT_X * this.speed; // x velocity
+        this.vy = TILT_Y * this.speed; // y velocity
         this.maxSpeed = size / 50 * DROPLETS_MAX_SPEED;
         this.counter = counter;
         this.splatters = [];
@@ -110,8 +114,8 @@ class Droplet {
     }
     moveDroplet() {
         // Update velocity based on tilt
-        this.updateVel('vy', tiltY);
-        this.updateVel('vx', tiltX);
+        this.updateVel('vy', TILT_Y);
+        this.updateVel('vx', TILT_X);
 
         // Update position based on velocity
         this.x += this.vx;
@@ -130,7 +134,7 @@ class Droplet {
         }
     }
     updateVel(prop, tilt) {
-        if (tilt != 0) {
+        if ((tilt != 0)  && this.speed != 0) {
             let r = Math.random() * 1.9 - 0.1;
             this[prop] += tilt * (this.speed + r);
         } else if (USE_GRAVITY && prop === 'vy') {
@@ -207,7 +211,7 @@ class Droplet {
     }
     drawReflection(ctx) {
 
-        let repositionY = tiltY != 0 ? -this.size * 0.1 : tiltX != 0 ? this.size * 0.1 : 0;
+        let repositionY = TILT_Y != 0 ? -this.size * 0.1 : TILT_X != 0 ? this.size * 0.1 : 0;
         // Draw the ::before pseudo-element
         ctx.beginPath();
         ctx.arc(this.x - this.size / 1.7, this.y - this.size / 2.2 + repositionY, this.size / 17, 0, 2 * Math.PI);
@@ -215,7 +219,7 @@ class Droplet {
         ctx.fill();
 
 
-        let rotation = tiltY != 0 ? Math.PI / 4 : tiltX != 0 ? Math.PI / 2.8 : Math.PI / 3;
+        let rotation = TILT_Y != 0 ? Math.PI / 4 : TILT_X != 0 ? Math.PI / 2.8 : Math.PI / 3;
         // Draw the ::after pseudo-element
         ctx.beginPath();
         ctx.ellipse(this.x - this.size / 3.9, this.y - this.size / 1.4 + repositionY, this.size / 10, this.size / 4, rotation, 0, 2 * Math.PI);
@@ -250,36 +254,39 @@ class Droplet {
 
 function joinDroplets() {
     //when droplets touch each other, remove them from the array and add a new one in the same position, but adding their sizes
-    for (let i = 0; i < droplets.length; i++) {
-        for (let j = i + 1; j < droplets.length; j++) {
-            let droplet1 = droplets[i];
-            let droplet2 = droplets[j];
+    for (let i = 0; i < DROPLETS.length; i++) {
+        for (let j = i + 1; j < DROPLETS.length; j++) {
+            let droplet1 = DROPLETS[i];
+            let droplet2 = DROPLETS[j];
 
             //get the largest droplet
             let newDroplet = droplet1.size > droplet2.size ? droplet1 : droplet2;
             let secondDroplet = droplet1.size <= droplet2.size ? droplet1 : droplet2;
+            if (secondDroplet.size < MIN_SIZE_TO_JOIN) {
+                continue;
+            }
 
             let distance = Math.sqrt((droplet1.x - droplet2.x) ** 2 + (droplet1.y - droplet2.y) ** 2);
             if (distance < droplet1.size + droplet2.size) {
                 newDroplet.counter += secondDroplet.counter;
-                if (newDroplet.counter > maxCounter) {
-                    maxCounter = newDroplet.counter;
+                if (newDroplet.counter > MAX_COUNTER) {
+                    MAX_COUNTER = newDroplet.counter;
                 }
                 let newSize = Math.sqrt(droplet1.size * droplet1.size + droplet2.size * droplet2.size);
-                droplets.splice(i, 1);
-                droplets.splice(j - 1, 1); // j - 1 because we just removed an element at position i
+                DROPLETS.splice(i, 1);
+                DROPLETS.splice(j - 1, 1); // j - 1 because we just removed an element at position i
 
                 // limit the size to the maximum size of a circle using the canvas width and height
                 const maxSize = Math.min(CANVAS_WIDTH, CANVAS_HEIGHT) / 2;
                 if (newSize <= maxSize) {
-                    droplets.push(new Droplet(newDroplet.x, newDroplet.y, newSize, newDroplet.counter, true, false));
+                    DROPLETS.push(new Droplet(newDroplet.x, newDroplet.y, newSize, newDroplet.counter, true, false));
                 }
             }
         }
     }
 }
 function update() {
-    for (let droplet of droplets) {
+    for (let droplet of DROPLETS) {
         droplet.update();
     }
     removeDropletsOffScreen();
@@ -289,14 +296,16 @@ function update() {
 
 function removeDropletsOffScreen() {
     //when the droplet goes off the screen, remove it from the array
-    droplets = droplets.filter(function (droplet) {
+    DROPLETS = DROPLETS.filter(function (droplet) {
         return !((droplet.x < 0 || droplet.y < 0) || (Math.ceil(droplet.x) > CANVAS_WIDTH || Math.ceil(droplet.y) > CANVAS_HEIGHT))
     });
 }
 
 function createDroplet() {
-    if (droplets.length < MAX_DROPLETS) {
-        droplets.push(new Droplet(rPosX(), rPosY(), rSize()));
+    if(DROPLETS.length === 0) {
+        DROPLETS.push(new Droplet(rPosX(), rPosY(), MIN_SIZE_TO_MOVE, 1, false, true));
+    }else if (DROPLETS.length < MAX_DROPLETS) {
+        DROPLETS.push(new Droplet(rPosX(), rPosY(), rSize(), 1, false, true));
     }
 
     // Call this function again after a random delay between 1 and 3 seconds
@@ -320,11 +329,14 @@ function rSize() {
 }
 
 function speed(size) {
+    if(size < MIN_SIZE_TO_MOVE) {
+        return 0;
+    }
     return size / 100;
 }
 
 function win() {
-    return maxCounter >= GOAL;
+    return MAX_COUNTER >= GOAL;
 }
 
 function gameOver() {
@@ -336,15 +348,15 @@ function drawCounter() {
     let ctx = canvas.getContext('2d');
     ctx.font = "14px Arial";
     ctx.fillStyle = "black";
-    ctx.fillText(`TOP SCORE: ${maxCounter} droplets joined`, 10, 30);
-    ctx.fillText(`Droplets: ${droplets.length}`, 10, 50);
-    ctx.fillText(`Tilt: : ${tiltX}x - ${tiltY}y`, 10, 70);
+    ctx.fillText(`TOP SCORE: ${MAX_COUNTER} droplets joined`, 10, 30);
+    ctx.fillText(`Droplets: ${DROPLETS.length}`, 10, 50);
+    ctx.fillText(`Tilt: : ${TILT_X}x - ${TILT_Y}y`, 10, 70);
     ctx.fillText(`Gravity: ${USE_GRAVITY ? 'ON' : 'OFF'}`, 10, 90);
     ctx.fillText(`Bounce: ${BOUNCE_OFF_EDGES ? 'ON' : 'OFF'}`, 10, 110);
     ctx.fillText(`Max Speed: ${DROPLETS_MAX_SPEED}`, 10, 130);
     ctx.fillText(`Time: ${TIME}`, 10, 150);
     ctx.fillText(`Goal: ${GOAL}`, 10, 170);
-    ctx.fillText(`Level: ${currentLevel}`, 10, 190);
+    ctx.fillText(`Level: ${CURRENT_LEVEL}`, 10, 190);
 
     if (gameOver()) {
         ctx.font = "30px Arial";
@@ -357,10 +369,10 @@ function drawCounter() {
             ctx.fillText(`You win!`, CANVAS_WIDTH / 2 + 40, CANVAS_HEIGHT / 2 + 30);
         }
 
-        if (maxCounter > 0) {
+        if (MAX_COUNTER > 0) {
             ctx.font = "20px Arial";
             ctx.fillStyle = "black";
-            ctx.fillText(`You joined ${maxCounter} droplets`, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 60);
+            ctx.fillText(`You joined ${MAX_COUNTER} droplets`, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 60);
         }
 
         addRestartButton(ctx);
@@ -400,7 +412,7 @@ function draw() {
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    for (let droplet of droplets) {
+    for (let droplet of DROPLETS) {
         droplet.draw(ctx);
     }
 
@@ -418,25 +430,25 @@ window.addEventListener('keydown', function (event) {
         return;
     }
     if (['ArrowLeft', 'a'].includes(event.key)) {
-        tiltX += -1;
+        TILT_X += -1;
     } else if (['d', 'ArrowRight'].includes(event.key)) {
-        tiltX += 1;
+        TILT_X += 1;
     } else if (['ArrowUp', 'w'].includes(event.key)) {
-        tiltY += -1;
+        TILT_Y += -1;
     } else if (['s', 'ArrowDown'].includes(event.key)) {
-        tiltY += 1;
+        TILT_Y += 1;
     }
     if (event.key === ' ') {
-        droplets.push(new Droplet(rPosX(), rPosY(), rSize()));
+        DROPLETS.push(new Droplet(rPosX(), rPosY(), rSize()));
     }
 });
 
 window.addEventListener('keyup', function (event) {
     if (['ArrowLeft', 'ArrowRight', 'a', 'd'].includes(event.key)) {
-        tiltX = 0;
+        TILT_X = 0;
     }
     if (['ArrowUp', 'ArrowDown', 'w', 's'].includes(event.key)) {
-        tiltY = 0;
+        TILT_Y = 0;
     }
 });
 
@@ -478,7 +490,7 @@ document.querySelectorAll('[data-slider-target]').forEach(function (slider) {
 });
 
 window.addEventListener('load', function (event) {
-    CANVAS_WIDTH = window.innerWidth;
+    CANVAS_WIDTH = window.innerWidth * 0.9;
     CANVAS_HEIGHT = window.innerHeight;
 
     // Set initial input values
@@ -512,7 +524,7 @@ window.addEventListener('load', function (event) {
     document.querySelectorAll('[data-level]').forEach(function (element) {
         element.addEventListener('click', function () {
             let targetLevel = this.getAttribute('data-level');
-            currentLevel = targetLevel;
+            CURRENT_LEVEL = targetLevel;
             setLevel(levels[targetLevel]);
             resetGame();
         });
@@ -534,7 +546,7 @@ window.addEventListener('load', function (event) {
 
         if (x >= elementX && x <= elementX + elementWidth && y >= elementY && y <= elementY + elementHeight) {
             // The click was inside the element, perform the action
-            setLevel(levels[currentLevel]);
+            setLevel(levels[CURRENT_LEVEL]);
         }
         // Check if the click is within the bounds of the element
         // Replace these with the actual bounds of your element
@@ -549,11 +561,11 @@ window.addEventListener('load', function (event) {
 });
 
 function nextLevel() {
-    currentLevel++;
-    if (currentLevel > Object.keys(levels).length) {
-        currentLevel = 1;
+    CURRENT_LEVEL++;
+    if (CURRENT_LEVEL > Object.keys(levels).length) {
+        CURRENT_LEVEL = 1;
     }
-    setLevel(levels[currentLevel]);
+    setLevel(levels[CURRENT_LEVEL]);
     resetGame();
 }
 
@@ -567,17 +579,18 @@ function setLevel(level) {
     DROPLETS_MAX_SPEED = level.dropletsMaxSpeed;
     TIME = level.time;
     GOAL = level.goal;
+    resetGame();
 }
 
 
 
 function resetGame() {
-    droplets = [];
-    tiltX = 0;
-    tiltY = 0;
-    maxCounter = 0;
-    TIME = levels[currentLevel].time;
-    GOAL = levels[currentLevel].goal;
+    DROPLETS = [];
+    TILT_X = 0;
+    TILT_Y = 0;
+    MAX_COUNTER = 0;
+    TIME = levels[CURRENT_LEVEL].time;
+    GOAL = levels[CURRENT_LEVEL].goal;
 }
 
 function gameLoop() {

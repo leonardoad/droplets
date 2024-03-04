@@ -11,7 +11,7 @@ canvas {
 
 .canvas-container {
   background: linear-gradient(to bottom, #87ceeb, #78bfdc, #69b0cd, #96ddfa);
-  max-width: 100%;
+  max-width: 90%;
   margin: 0 auto;
 }
 
